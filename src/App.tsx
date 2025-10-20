@@ -1,9 +1,10 @@
 import "./App.css";
+import { TaskPanel } from "./pages/TaskPanel/TaskPanel";
 
 function App() {
   return (
     <>
-      <h1>Hello</h1>
+      <TaskPanel />
     </>
   );
 }
