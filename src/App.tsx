@@ -1,9 +1,9 @@
 import "./App.css";
-import { TaskPanel } from "./pages/TaskPanel/TaskPanel";
+import { UserList } from "./pages/UserPanel/UserList";
 import "./dependencies";
 
 function App() {
-  return <TaskPanel />;
+  return <UserList />;
 }
 
 export default App;

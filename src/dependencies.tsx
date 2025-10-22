@@ -1,4 +1,4 @@
-import { TaskApi } from "./domain/task/TaskApi";
+import { UserApi } from "./domain/User/UserApi";
 import { register } from "./lib/provider";
 
-register(TaskApi, new TaskApi());
+register(UserApi, new UserApi());

@@ -26,24 +26,30 @@ Spoon propone invertir el flujo de desarrollo:
 
 ### 1. Capa DOMAIN 🗄️
 
-**Responsabilidad**: "Define los modelos de información, el acceso a datos, y las acciones que se pueden realizar con ellos"
+**Responsabilidad**: Define los modelos de información, el acceso a datos, y las acciones que se pueden realizar con estos.
 
-En la capa de dominio escuchamos los siguientes conceptos (Interfaz, Modelo, Api, Entidad y Validador)
+**Conceptos**: Modelo, Api, Entidad y Validador.
 
-- **INTERFAZ**: Define el modelo de información con el que voy a trabajar
+**MODELO**: Define la estructura de datos y proporciona una forma reactiva de interactuar con ella.
+
+- **¿Cuándo se utiliza?**: Cuando necesito definir la estructura de datos que voy a manejar en mi aplicación y crear instancias reactivas para trabajar con estos datos.
 
 ```typescript
-interface Usermodel {
+// Definición de la estructura
+interface UserModel {
   name: string;
   email: string;
   age: number;
 }
+
+// Función para crear instancias reactivas del modelo
+const createUserModel = () => state<UserModel>();
 ```
 
-- **MODELO**: Proporciona una forma de interactuar con un modelo.
+**Utilización**:
 
 ```typescript
-const user = state<UserModel>();
+const user = createUserModel();
 
 user.set({
   name: "John Doe",
@@ -52,9 +58,12 @@ user.set({
 });
 
 user.name.get(); // John Doe
+user.name.set(true); // ERROR (Type safe)
 ```
 
-- **API**: Proporciona acceso a los datos
+**API**: Proporciona acceso a los datos
+
+- **¿Cuándo se utiliza?**: Cuando necesito interactuar con una fuente de datos externa, como una API REST, para obtener o enviar datos.
 
 ```typescript
 class UserApi {
@@ -76,7 +85,9 @@ class UserApi {
 }
 ```
 
-- **VALIDADOR**: Determina si un modelo es válido o no
+**VALIDADOR**: Determina si un modelo es válido o no
+
+- **¿Cuándo se utiliza?**: Cuando necesito asegurarme de que los datos en un modelo cumplen con ciertas reglas antes de procesarlos o enviarlos a una API.
 
 ```typescript
 const createUserValidator = (userModel) =>
@@ -91,7 +102,9 @@ const createUserValidator = (userModel) =>
   });
 ```
 
-- **ENTIDAD**: Encapsula el acceso a todo lo anterior y define acciones que se pueden realizar.
+**ENTIDAD**: Encapsula el acceso a todo lo anterior y define acciones que se pueden realizar.
+
+- **¿Cuándo se utiliza?**: Cuando necesito una representación completa de un modelo de datos que incluya su estructura, validación y las operaciones que se pueden realizar sobre él.
 
 ```typescript
 class UserEntity {
@@ -119,53 +132,57 @@ class UserEntity {
 
 ### 2. Capa CTRL ⚙️
 
-**Responsabilidad**: "Cómo interactúo con ello"
+>TODO: 
+> - Binding de props con signals
+> - Ctrl complejos
+> - 
 
-La capa de controladores contiene los **controladores** que:
-
+**Responsabilidad**: 
 - Orquestan la lógica de negocio
 - Gestionan el estado de los componentes
-- Conectan el dominio con la presentación
-- Permiten composición, extensión y abstracción
+- Conectan el **DOMINIO** con la **PRESENTACIÓN**
+- Permiten composición, extensión y abstracción.
 
-#### Características de los Controladores
+#### _Conceptos Clave_:
 
-- **Son la parte lógica** de un controlador
-- **Permiten herencia y composición** a diferencia de los componentes
+- **Son la parte lógica**
+- **Permiten herencia** a diferencia de los componentes
 - **Gestionan eventos** y comunicación entre elementos
-- **No tienen responsabilidad visual**
+- **No tienen responsabilidad VISUAL**
 
 #### Ejemplo: MyProfileController
 
 ```typescript
-class MyProfileCtrl {
-  private user: UserEntity;
+class UserFormCtrl extends Ctrl {
+  private user = new UserEntity();
 
   nameInput = new InputCtrl({
     label: "Name",
-    onChange: (value) => {
-      this.user.setValue({ name: value });
-    },
+    value: this.user.model.name,
+  });
+
+  emailInput = new InputCtrl({
+    label: "Email",
+    value: this.user.model.email,
+    type: "email",
   });
 
   saveButton = new ButtonCtrl({
     label: "Save",
-    onClick: () => this.saveChanges(),
+    onClick: () => this.user.save(),
   });
-
-  private saveChanges() {
-    if (this.user.isValid) {
-      this.user.save();
-    }
-  }
 }
 ```
 
 ### 3. Capa PRESENTATION 🎨
+>TODO:
+> - [ ] Hooks de uso de ctrl
+> - [ ] Ejemplos de componentes complejos
+> - [ ] useRegister y provider como `context`
 
-**Responsabilidad**: "Qué apariencia tiene"
+**Responsabilidad**: Visualizar la información conforme a las indicaciones del controlador y mandar eventos de usuario de vuelta al controlador.
 
-La capa de presentación contiene los **componentes visuales** que:
+#### Conceptos Clave:
 
 - Solo se encargan de presentar información
 - No contienen lógica de negocio ("no piensan, solo presentan")
@@ -175,16 +192,16 @@ La capa de presentación contiene los **componentes visuales** que:
 #### Ejemplo: Input Component
 
 ```jsx
-function Input({ from }) {
-  const ctrl = useCtrl(from);
+function Input({ ctrl }) {
+  const self = useCtrl(ctrl);
 
   return (
     <input
-      className={!ctrl.isValid ? "error" : ""}
-      value={ctrl.value}
-      type={ctrl.type}
-      placeholder={ctrl.placeholder}
-      onChange={(e) => ctrl.setValue(e)}
+      className={!self.isValid ? "error" : ""}
+      value={self.value.get()}
+      type={self.type.get()}
+      placeholder={self.placeholder.get()}
+      onChange={(e) => self.value.set(e.target.value)}
     />
   );
 }
@@ -238,11 +255,14 @@ Para comunicar elementos distantes en el árbol de componentes:
 ```
 src/
 ├── domain/
-│   ├── entities/
+│   ├── User/
 │   │   ├── UserEntity.ts
-│   │   ├── ProductEntity.ts
+│   │   ├── UserModel.ts
+│   │   ├── UserApi.ts
+│   │   ├── UserValidator.ts
 │   │   └── ...
-│   └── interfaces/
+│   └── Task/
+│       └── ...
 ├── ctrl/
 │   ├── controllers/
 │   │   ├── InputCtrl.ts
