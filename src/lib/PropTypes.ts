@@ -1,3 +1,6 @@
+import type { Emitter } from "./Emitter";
+import type { Calc, State } from "./signals";
+
 type ExtractCalcType<P> = P extends Calc<infer T> ? T : never;
 type ExtractEmitterType<P> = P extends Emitter<infer T> ? T : never;
 type ExtractPropType<P> = P extends State<infer T> ? T : never;
@@ -12,7 +15,7 @@ export type PropModel<T> = {
   [K in keyof T as T[K] extends State<any> ? K : never]?:
     | ExtractPropType<T[K]>
     | State<ExtractPropType<T[K]>>
-    | Calc<ExtractPropType<T[K]>>;
+    | Calc<ExtractCalcType<T[K]>>;
 };
 
 export type PropValues<T> = {
