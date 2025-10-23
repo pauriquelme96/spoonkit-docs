@@ -3,6 +3,7 @@ import { stateArray } from "./stateArray";
 import type { StateLike } from "./stateArray";
 import { state } from "./State";
 import { calc } from "./Calc";
+import { stateObject } from "./stateObject";
 
 describe("stateArray", () => {
   describe("Basic functionality", () => {
@@ -574,6 +575,139 @@ describe("stateArray", () => {
       
       expect(arr.get()).toHaveLength(1000);
       expect(duration).toBeLessThan(1000);
+    });
+  });
+
+  describe("Integration with stateObject", () => {
+    it("should correctly type stateArray with stateObject", () => {
+      const data = stateArray(() => stateObject({
+        id: state<number>(),
+        name: state<string>(),
+      }));
+
+      data.set([
+        { id: 1, name: "John" },
+        { id: 2, name: "Jane" }
+      ]);
+
+      const result = data.get();
+      
+      // Type checking: result should be { id: number, name: string }[]
+      const firstItem: { id: number; name: string } = result[0];
+      expect(firstItem.id).toBe(1);
+      expect(firstItem.name).toBe("John");
+      
+      expect(result).toEqual([
+        { id: 1, name: "John" },
+        { id: 2, name: "Jane" }
+      ]);
+    });
+
+    it("should maintain type safety with stateObject operations", () => {
+      interface User {
+        id: number;
+        name: string;
+        age: number;
+      }
+
+      const users = stateArray(() => stateObject({
+        id: state<number>(),
+        name: state<string>(),
+        age: state<number>(),
+      }));
+
+      users.set([
+        { id: 1, name: "Alice", age: 30 },
+        { id: 2, name: "Bob", age: 25 }
+      ]);
+
+      const result: User[] = users.get();
+      
+      expect(result[0].id).toBe(1);
+      expect(result[0].name).toBe("Alice");
+      expect(result[0].age).toBe(30);
+      expect(result).toHaveLength(2);
+    });
+
+    it("should work with push and stateObject", () => {
+      const data = stateArray(() => stateObject({
+        id: state<number>(),
+        name: state<string>(),
+      }));
+
+      data.push({ id: 1, name: "First" });
+      data.push({ id: 2, name: "Second" });
+
+      const result = data.get();
+      
+      expect(result).toEqual([
+        { id: 1, name: "First" },
+        { id: 2, name: "Second" }
+      ]);
+      expect(result[0].id).toBe(1);
+      expect(result[1].name).toBe("Second");
+    });
+
+    it("should reactively update with stateObject", () => {
+      const data = stateArray(() => stateObject({
+        id: state<number>(),
+        value: state<string>(),
+      }));
+
+      data.set([
+        { id: 1, value: "a" },
+        { id: 2, value: "b" }
+      ]);
+
+      const computed = calc(() => {
+        const items = data.get();
+        return items.map(item => item.value).join(",");
+      });
+
+      expect(computed.get()).toBe("a,b");
+
+      // Update individual item
+      const signals = data.map(s => s);
+      signals[0].set({ id: 1, value: "updated" });
+
+      expect(computed.get()).toBe("updated,b");
+    });
+
+    it("should handle nested optional properties with stateObject", () => {
+      const data = stateArray(() => stateObject({
+        id: state<number>(),
+        name: state<string>(),
+        email: state<string | undefined>(),
+      }));
+
+      data.set([
+        { id: 1, name: "User1", email: "user1@test.com" },
+        { id: 2, name: "User2" }
+      ]);
+
+      const result = data.get();
+      
+      expect(result[0].email).toBe("user1@test.com");
+      expect(result[1].email).toBeUndefined();
+      expect(result).toHaveLength(2);
+    });
+
+    it("should correctly type peek with stateObject", () => {
+      const data = stateArray(() => stateObject({
+        id: state<number>(),
+        title: state<string>(),
+      }));
+
+      data.set([
+        { id: 100, title: "Test" }
+      ]);
+
+      const peeked = data.peek();
+      
+      // Type check
+      const item: { id: number; title: string } = peeked[0];
+      expect(item.id).toBe(100);
+      expect(item.title).toBe("Test");
     });
   });
 });

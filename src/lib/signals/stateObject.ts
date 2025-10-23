@@ -2,28 +2,35 @@ import { calc } from "./Calc";
 import type { StateLike } from "./stateArray";
 
 type ExtractSetType<T> = T extends { set(value: infer V): void } ? V : never;
+type ExtractGetType<T> = T extends { get(): infer V } ? V : never;
 
 type ExtractStateTypes<T extends Record<string, StateLike>> = {
   [K in keyof T]?: ExtractSetType<T[K]>;
 };
 
+type ExtractGetTypes<T extends Record<string, StateLike>> = {
+  [K in keyof T]: ExtractGetType<T[K]>;
+};
+
 export function stateObject<T extends Record<string, StateLike>>(model: T) {
-  const _value = calc(() => {
+  type GetType = ExtractGetTypes<T>;
+
+  const _value = calc<GetType>(() => {
     const value: Record<string, any> = {};
 
     for (const key in model) {
       value[key] = model[key].get();
     }
 
-    return value;
+    return value as GetType;
   });
 
   return {
     ...model,
-    get() {
+    get(): GetType {
       return _value.get();
     },
-    peek() {
+    peek(): GetType {
       return _value.peek();
     },
     set(newValue: ExtractStateTypes<T>) {

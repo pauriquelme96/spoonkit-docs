@@ -12,17 +12,18 @@ type ExtractGetType<T> = T extends { get(): infer V } ? V : never;
 
 export function stateArray<T extends StateLike>(fn: () => T) {
   const _signals = state<T[]>([]);
-  const _value = calc(() => _signals.get().map((signal) => signal.get()));
 
   type SetType = ExtractSetType<T>;
   type GetType = ExtractGetType<T>;
 
+  const _value = calc<GetType[]>(() => _signals.get().map((signal) => signal.get() as GetType));
+
   return {
     get(): GetType[] {
-      return _value.get() as GetType[];
+      return _value.get();
     },
     peek(): GetType[] {
-      return _value.peek() as GetType[];
+      return _value.peek();
     },
     set(newValues: SetType[]) {
       const existingSignals = _signals.peek();
