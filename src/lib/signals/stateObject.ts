@@ -13,6 +13,13 @@ type ExtractGetTypes<T extends Record<string, StateLike>> = {
 };
 
 export function stateObject<T extends Record<string, StateLike>>(model: T) {
+  if (!model || typeof model !== 'object' || Array.isArray(model)) {
+    throw new TypeError(
+      `stateObject() expects an object, but received ${Array.isArray(model) ? 'array' : typeof model}. ` +
+      `Value: ${JSON.stringify(model)}`
+    );
+  }
+
   type GetType = ExtractGetTypes<T>;
 
   const _value = calc<GetType>(() => {
@@ -36,6 +43,13 @@ export function stateObject<T extends Record<string, StateLike>>(model: T) {
       return { ..._value.peek() };
     },
     set(newValue: ExtractStateTypes<T>) {
+      if (!newValue || typeof newValue !== 'object' || Array.isArray(newValue)) {
+        throw new TypeError(
+          `stateObject.set() expects an object, but received ${Array.isArray(newValue) ? 'array' : typeof newValue}. ` +
+          `Value: ${JSON.stringify(newValue)}`
+        );
+      }
+
       for (const key in model) {
         if (newValue.hasOwnProperty(key) && model[key].set) {
           model[key].set(newValue[key]);

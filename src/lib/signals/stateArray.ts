@@ -26,6 +26,13 @@ export function stateArray<T extends StateLike>(fn: () => T) {
       return _value.peek();
     },
     set(newValues: SetType[]) {
+      if (!Array.isArray(newValues)) {
+        throw new TypeError(
+          `stateArray.set() expects an array, but received ${typeof newValues}. ` +
+          `Value: ${JSON.stringify(newValues)}`
+        );
+      }
+
       const existingSignals = _signals.peek();
       const newSignals: T[] = [];
 
@@ -40,9 +47,19 @@ export function stateArray<T extends StateLike>(fn: () => T) {
       _signals.set(newSignals);
     },
     map<R>(mapFn: (item: T, index: number) => R): R[] {
+      if (typeof mapFn !== 'function') {
+        throw new TypeError(
+          `stateArray.map() expects a function, but received ${typeof mapFn}`
+        );
+      }
       return _signals.get().map(mapFn);
     },
     filter(filterFn: (item: T, index: number) => boolean): T[] {
+      if (typeof filterFn !== 'function') {
+        throw new TypeError(
+          `stateArray.filter() expects a function, but received ${typeof filterFn}`
+        );
+      }
       return _signals.get().filter(filterFn);
     },
     push(value: SetType) {

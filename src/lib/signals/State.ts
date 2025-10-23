@@ -23,6 +23,12 @@ export class State<T> {
   }
 
   public set(value: T | State<T> | Calc<T>): this {
+    if (value === undefined && arguments.length === 0) {
+      throw new TypeError(
+        'State.set() requires a value argument'
+      );
+    }
+
     if (value instanceof State || value instanceof Calc) {
       this.disposePrevious();
 
