@@ -370,14 +370,14 @@ describe("stateObject", () => {
 
     it("should handle setting with undefined properties", () => {
       const obj = stateObject({
-        a: state(1),
+        a: state<number | undefined>(1),
         b: state(2)
       });
       
       obj.set({ a: undefined });
       
-      // undefined should be ignored
-      expect(obj.get().a).toBe(1);
+      // undefined should be set when explicitly provided
+      expect(obj.get().a).toBeUndefined();
     });
 
     it("should handle rapid consecutive updates", () => {
