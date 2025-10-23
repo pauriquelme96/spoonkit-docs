@@ -10,25 +10,25 @@ let usersDb: (UserModel & { id: string })[] = [
   {
     id: "1",
     name: "Juan Pérez",
-    email: "juan.perez@example.com",
+    email: ["juan.perez@example.com"],
     age: 28,
   },
   {
     id: "2",
     name: "María García",
-    email: "maria.garcia@example.com",
+    email: ["maria.garcia@example.com"],
     age: 32,
   },
   {
     id: "3",
     name: "Carlos López",
-    email: "carlos.lopez@example.com",
+    email: ["carlos.lopez@example.com"],
     age: 25,
   },
   {
     id: "4",
     name: "Ana Martínez",
-    email: "ana.martinez@example.com",
+    email: ["ana.martinez@example.com"],
     age: 29,
   },
 ];
@@ -69,7 +69,9 @@ mock.onPost("/api/users").reply((config) => {
     }
 
     // Validar email único
-    const existingUser = usersDb.find((u) => u.email === userData.email);
+    const existingUser = usersDb.find((u) => 
+      u.email.some(e => userData.email?.includes(e))
+    );
     if (existingUser) {
       return [409, { error: "El email ya está en uso." }];
     }
@@ -108,7 +110,7 @@ mock.onPut(/\/api\/users\/\w+/).reply((config) => {
 
     // Validar email único (excluyendo el usuario actual)
     const existingUser = usersDb.find(
-      (u) => u.email === userData.email && u.id !== id
+      (u) => u.email.some(e => userData.email?.includes(e)) && u.id !== id
     );
     if (existingUser) {
       return [409, { error: "El email ya está en uso." }];
@@ -136,7 +138,7 @@ mock.onPatch(/\/api\/users\/\w+/).reply((config) => {
     // Validar email único si se está actualizando
     if (partialData.email) {
       const existingUser = usersDb.find(
-        (u) => u.email === partialData.email && u.id !== id
+        (u) => u.email.some(e => partialData.email?.includes(e)) && u.id !== id
       );
       if (existingUser) {
         return [409, { error: "El email ya está en uso." }];
@@ -175,7 +177,7 @@ mock.onGet("/api/users/search").reply((config) => {
   const filteredUsers = usersDb.filter(
     (user) =>
       user.name.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query)
+      user.email.some(e => e.toLowerCase().includes(query))
   );
 
   return [200, filteredUsers];
