@@ -1,5 +1,5 @@
 import { calc } from "./Calc";
-import type { StateLike } from "./stateArr";
+import type { StateLike } from "./stateArray";
 
 type ExtractSetType<T> = T extends { set(value: infer V): void } ? V : never;
 
@@ -7,7 +7,7 @@ type ExtractStateTypes<T extends Record<string, StateLike>> = {
   [K in keyof T]?: ExtractSetType<T[K]>;
 };
 
-export function stateObj<T extends Record<string, StateLike>>(model: T) {
+export function stateObject<T extends Record<string, StateLike>>(model: T) {
   const _value = calc(() => {
     const value: Record<string, any> = {};
 

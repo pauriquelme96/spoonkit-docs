@@ -1,5 +1,5 @@
 import { Field } from "./domain/Field";
-import type { StateLike } from "./signals/stateArr";
+import type { StateLike } from "./signals/stateArray";
 
 export type FieldObject = { [key: string]: Field<any> | FieldObject };
 
