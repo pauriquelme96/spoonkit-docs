@@ -1,13 +1,8 @@
-import { observer } from "@legendapp/state/react";
 import { useCtrl } from "../../lib/useCtrl";
 import { ButtonCtrl } from "./ButtonCtrl";
 
-interface ButtonProps {
-  ctrl: ButtonCtrl;
-}
-
-export const Button = observer(({ ctrl }: ButtonProps) => {
-  const {self} = useCtrl(ctrl);
+export function Button({ ctrl }: { ctrl: ButtonCtrl }) {
+  const { self } = useCtrl(ctrl);
 
   return (
     <button
@@ -22,4 +17,4 @@ export const Button = observer(({ ctrl }: ButtonProps) => {
       {self.loading.get() ? "..." : self.label.get()}
     </button>
   );
-});
+}

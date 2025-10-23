@@ -1,13 +1,8 @@
-import { observer } from "@legendapp/state/react";
 import { useCtrl } from "../../lib/useCtrl";
 import { InputCtrl } from "./InputCtrl";
 
-interface InputProps {
-  ctrl: InputCtrl;
-}
-
-export const Input = observer(({ ctrl }: InputProps) => {
-  const {self} = useCtrl(ctrl);
+export function Input({ ctrl }: { ctrl: InputCtrl }) {
+  const { self } = useCtrl(ctrl);
 
   return (
     <div className="input-wrapper">
@@ -30,4 +25,4 @@ export const Input = observer(({ ctrl }: InputProps) => {
       )}
     </div>
   );
-});
+}

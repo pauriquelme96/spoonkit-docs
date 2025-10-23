@@ -1,6 +1,6 @@
-import { batch } from "@legendapp/state";
-import { Emitter, emitter } from "./Emitter";
 import type { PropModel } from "./PropTypes";
+import { $batch } from "./signals/$batch";
+import { Emitter, emitter } from "./signals/Emitter";
 
 export class Ctrl {
   key = Math.random().toString(36).slice(2);
@@ -25,12 +25,17 @@ export class Ctrl {
       props = props(this);
     }
 
-    batch(() => {
+    $batch(() => {
       for (const key in props) {
-        if (this[key].set instanceof Function) {
-          this[key].set(props[key]);
-        } else if (this[key] instanceof Emitter) {
-          this[key].subscribe(props[key]);
+        const value = props[key];
+        const target = this[key];
+
+        if (target instanceof Emitter && typeof value === "function") {
+          // Si es un Emitter y el valor es una función, suscribirse
+          target.subscribe(value as any);
+        } else if (target?.set instanceof Function) {
+          // Si tiene método set (State o Calc), usar set
+          target.set(value);
         }
       }
     });
