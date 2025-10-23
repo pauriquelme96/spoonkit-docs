@@ -35,7 +35,7 @@ export function stateObject<T extends Record<string, StateLike>>(model: T) {
     },
     set(newValue: ExtractStateTypes<T>) {
       for (const key in model) {
-        if (newValue[key] !== undefined) {
+        if (newValue[key] !== undefined && model[key].set) {
           model[key].set(newValue[key]);
         }
       }

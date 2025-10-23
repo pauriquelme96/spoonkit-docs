@@ -3,7 +3,7 @@ import { state } from "./State";
 
 export interface StateLike<T = unknown> {
   get(): T;
-  set(value: T): void;
+  set?(value: T): void;
   peek(): T;
 }
 
@@ -31,7 +31,9 @@ export function stateArray<T extends StateLike>(fn: () => T) {
 
       newValues.forEach((value, i) => {
         const signal = existingSignals[i] || fn();
-        signal.set(value as any);
+        if (signal.set) {
+          signal.set(value as any);
+        }
         newSignals.push(signal);
       });
 
@@ -46,7 +48,9 @@ export function stateArray<T extends StateLike>(fn: () => T) {
     push(value: SetType) {
       const existingSignals = _signals.peek();
       const newSignal = fn();
-      newSignal.set(value as any);
+      if (newSignal.set) {
+        newSignal.set(value as any);
+      }
       _signals.set([...existingSignals, newSignal]);
     },
     pop(): SetType | undefined {
