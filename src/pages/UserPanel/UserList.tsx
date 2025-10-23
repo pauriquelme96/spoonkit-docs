@@ -4,7 +4,7 @@ import { useCtrl } from "../../lib/useCtrl";
 
 
 export const UserList = observer(() => {
-  const self = useCtrl(UserListCtrl);
+  const { self } = useCtrl(UserListCtrl);
 
   return (
     <div>

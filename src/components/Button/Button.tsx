@@ -7,7 +7,7 @@ interface ButtonProps {
 }
 
 export const Button = observer(({ ctrl }: ButtonProps) => {
-  const self = useCtrl(ctrl);
+  const {self} = useCtrl(ctrl);
 
   return (
     <button

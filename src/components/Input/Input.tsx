@@ -7,7 +7,7 @@ interface InputProps {
 }
 
 export const Input = observer(({ ctrl }: InputProps) => {
-  const self = useCtrl(ctrl);
+  const {self} = useCtrl(ctrl);
 
   return (
     <div className="input-wrapper">
