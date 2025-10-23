@@ -1,23 +1,21 @@
-import { computed } from "@legendapp/state";
 import { provide } from "../../lib/provider";
 import { UserApi } from "./UserApi";
 import { createUserModel, type UserModel } from "./UserModel";
-import { createUserValidator } from "./UserValidator";
+import { userValidator } from "./UserValidator";
+import { calc } from "../../lib/signals/Calc";
 
 export class UserEntity {
   private api = provide(UserApi);
   public model = createUserModel();
-  public validator = createUserValidator(this.model);
-  public isValid = computed(() =>
-    Object.values(this.validator.get()).every((v) => v)
-  );
+  public validation = calc(() => userValidator(this.model.get()));
 
   constructor(user: UserModel) {
     this.model.set(user);
   }
 
   public async save() {
-    if (!this.isValid.get()) throw new Error("Invalid user data");
+    const isValid = Object.values(this.validation.get()).every((v) => v);
+    if (!isValid) throw new Error("Invalid user data");
 
     this.model.id.get()
       ? await this.api.updateUser(this.model.id.get(), this.model.get())
