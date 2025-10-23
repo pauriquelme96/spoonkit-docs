@@ -1,8 +1,7 @@
 import { observer } from "@legendapp/state/react";
 import { UserListCtrl } from "./UserListCtrl";
 import { useCtrl } from "../../lib/useCtrl";
-import { Dialog } from "../../components/Dialog/Dialog";
-import { UserForm } from "./UserForm";
+
 
 export const UserList = observer(() => {
   const self = useCtrl(UserListCtrl);
@@ -35,10 +34,6 @@ export const UserList = observer(() => {
           ))}
         </tbody>
       </table>
-
-      <Dialog ctrl={self.dialog}>
-        {self.currentUserForm && <UserForm ctrl={self.currentUserForm} />}
-      </Dialog>
     </div>
   );
 });
