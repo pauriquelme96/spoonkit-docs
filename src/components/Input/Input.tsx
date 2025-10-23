@@ -1,7 +1,7 @@
 import { useCtrl } from "../../lib/useCtrl";
 import { InputCtrl } from "./InputCtrl";
 
-export function Input({ ctrl }: { ctrl: InputCtrl }) {
+export function Input({ ctrl }: { ctrl: InputCtrl<any> }) {
   const { self } = useCtrl(ctrl);
 
   return (

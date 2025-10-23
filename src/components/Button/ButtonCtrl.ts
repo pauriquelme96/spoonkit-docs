@@ -1,6 +1,6 @@
 import { Ctrl } from "../../lib/Ctrl";
-import { emitter } from "../../lib/Emitter";
-import { state } from "../../lib/signals";
+import { emitter } from "../../lib/signals/Emitter";
+import { state } from "../../lib/signals/State";
 
 export class ButtonCtrl extends Ctrl {
   public label = state<string>("");

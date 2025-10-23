@@ -1,4 +1,4 @@
-import type { Class } from "./useCtrl2";
+import type { Class } from "./useCtrl";
 
 const providers = new Map();
 const tokenRegistry = new Map<string, symbol | Class<any>>();
