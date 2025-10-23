@@ -13,5 +13,3 @@ export const createUserModel = () =>
     email: stateArray(() => state<string>()),
     age: state<number>(),
   });
-
-
