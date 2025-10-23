@@ -46,14 +46,27 @@ type ExtractSetType<T> = T extends { set(value: infer V): void } ? V : never;
  *
  * type UserModel = InferModel<typeof userModel>;
  * // Result: { id: string; name: string; email: string[]; age: number; }
+ * 
+ * // También funciona con una función que retorna el modelo:
+ * const createUserModel = () => stateObj({...});
+ * type UserModel = InferModel<typeof createUserModel>;
+ * // Result: { id: string; name: string; email: string[]; age: number; }
  * ```
  */
-export type InferModel<T> = T extends {
-  get(): infer R;
-  peek(): any;
-  set(value: any): void;
-}
-  ? R
+export type InferModel<T> = T extends (...args: any[]) => infer R
+  ? R extends {
+      get(): infer M;
+      peek(): any;
+      set(value: any): void;
+    }
+    ? M
+    : never
+  : T extends {
+      get(): infer M;
+      peek(): any;
+      set(value: any): void;
+    }
+  ? M
   : never;
 
 /**
