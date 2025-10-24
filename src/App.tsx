@@ -1,9 +1,9 @@
 import "./App.css";
-import { UserList } from "./pages/UserPanel/UserList";
 import "./dependencies";
+import { UserPanel } from "./pages/UserPanel/UserPanel";
 
 function App() {
-  return <UserList />;
+  return <UserPanel />;
 }
 
 export default App;
