@@ -1,16 +1,31 @@
 import { UserApi } from "../../domain/User/UserApi";
 import { UserEntity } from "../../domain/User/UserEntity";
-import { Ctrl } from "../../lib/Ctrl";
 import { provide } from "../../lib/provider";
-import { state } from "../../lib/signals/State";
+import { State, state } from "../../lib/signals/State";
 import { emitter } from "../../lib/signals/Emitter";
+import { TableCtrl } from "../../components/Table/TableCtrl";
+import { stateObject, type StateObject } from "../../lib/signals/stateObject";
 
-export class UserListCtrl extends Ctrl {
+export class UserListCtrl extends TableCtrl<UserEntity> {
+
+
+  public columns = state([
+    { id: "name", label: "Name", minWidth: 170 },
+    { id: "email", label: "Email", minWidth: 100 },
+    { id: "role", label: "Role", minWidth: 100 },
+  ]),
+
+
+
+
+  public buildRow(item: UserEntity, index: number): Row<UserEntity> {
+    throw new Error("Method not implemented.");
+  }
   private api = provide(UserApi);
   public title = state("User Panel");
   public users = state<UserEntity[]>([]);
   public searching = state(false);
-  public onOpenDetail = emitter<UserEntity>();
+  public onRowClick = emitter<UserEntity>();
 
   ctrlStart() {
     this.fetchTasks();
@@ -24,6 +39,6 @@ export class UserListCtrl extends Ctrl {
   }
 
   public openUserDetail(user: UserEntity) {
-    this.onOpenDetail.next(user);
+    this.onRowClick.next(user);
   }
 }

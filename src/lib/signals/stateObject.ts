@@ -12,6 +12,7 @@ type ExtractGetTypes<T extends Record<string, StateLike>> = {
   [K in keyof T]: ExtractGetType<T[K]>;
 };
 
+export type StateObject<T extends Record<string, StateLike>> = ReturnType<typeof stateObject<T>>;
 export function stateObject<T extends Record<string, StateLike>>(model: T) {
   if (!model || typeof model !== 'object' || Array.isArray(model)) {
     throw new TypeError(

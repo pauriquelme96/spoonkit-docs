@@ -1,8 +1,10 @@
+import type { ComponentType } from "react";
 import type { PropModel } from "./PropTypes";
 import { $batch } from "./signals/$batch";
 import { Emitter, emitter } from "./signals/Emitter";
 
 export class Ctrl {
+  component?: ComponentType<any>;
   key = Math.random().toString(36).slice(2);
 
   onStart = emitter<this>();

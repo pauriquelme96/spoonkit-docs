@@ -14,7 +14,7 @@ export class UserEntity {
   }
 
   public async save() {
-    const isValid = Object.values(this.validation.get()).every((v) => v);
+    const isValid = Object.values(this.validation.get()).every((v) => v === true);
     if (!isValid) throw new Error("Invalid user data");
 
     this.model.id.get()

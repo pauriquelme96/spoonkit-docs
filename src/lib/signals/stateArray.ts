@@ -10,6 +10,7 @@ export interface StateLike<T = unknown> {
 type ExtractSetType<T> = T extends { set(value: infer V): void } ? V : never;
 type ExtractGetType<T> = T extends { get(): infer V } ? V : never;
 
+export type StateArray<T extends StateLike> = ReturnType<typeof stateArray<T>>;
 export function stateArray<T extends StateLike>(fn: () => T) {
   const _signals = state<T[]>([]);
 

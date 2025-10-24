@@ -8,7 +8,7 @@ export class UserPanelCtrl extends Ctrl {
   public userDetailCtrl = state<UserDetailCtrl>(null);
 
   public userListCtrl = new UserListCtrl().set({
-    onOpenDetail: (user: UserEntity) => {
+    onRowClick: (user: UserEntity) => {
       const detail = new UserDetailCtrl(user).set({
         onClose: () => this.userDetailCtrl.set(null),
       });
