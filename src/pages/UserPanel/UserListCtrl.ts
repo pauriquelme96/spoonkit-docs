@@ -1,26 +1,20 @@
 import { UserApi } from "../../domain/User/UserApi";
 import { UserEntity } from "../../domain/User/UserEntity";
 import { provide } from "../../lib/provider";
-import { State, state } from "../../lib/signals/State";
+import { state } from "../../lib/signals/State";
 import { emitter } from "../../lib/signals/Emitter";
 import { TableCtrl } from "../../components/Table/TableCtrl";
-import { stateObject, type StateObject } from "../../lib/signals/stateObject";
-
 export class UserListCtrl extends TableCtrl<UserEntity> {
-
-
   public columns = state([
     { id: "name", label: "Name", minWidth: 170 },
     { id: "email", label: "Email", minWidth: 100 },
     { id: "role", label: "Role", minWidth: 100 },
-  ]),
+  ]);
 
-
-
-
-  public buildRow(item: UserEntity, index: number): Row<UserEntity> {
+  public buildRow(item: UserEntity, index: number): any {
     throw new Error("Method not implemented.");
   }
+
   private api = provide(UserApi);
   public title = state("User Panel");
   public users = state<UserEntity[]>([]);

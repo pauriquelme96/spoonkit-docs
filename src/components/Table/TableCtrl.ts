@@ -4,7 +4,7 @@ import { Table } from "./Table";
 
 interface Column {
   id: string;
-  align?: 'center' | 'left' | 'right' | 'inherit';
+  align?: "center" | "left" | "right" | "inherit";
   label: string;
   minWidth?: string | number;
   sortable?: boolean;
@@ -14,7 +14,7 @@ type RowModel = {
   [key: string]: Ctrl;
 };
 
-interface Row<T> {
+export interface Row<T> {
   //key: string | number;
   model: RowModel;
   value: T;
@@ -43,7 +43,6 @@ export abstract class TableCtrl<T> extends Ctrl {
       return row;
     });
 
-    this.rows.set(rows);
+    this.rows.set(rows as any);
   }
-
 }

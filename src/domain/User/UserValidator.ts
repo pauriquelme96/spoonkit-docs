@@ -1,6 +1,4 @@
-
 import type { UserModel } from "./UserModel";
-
 
 export function userValidator(user: UserModel) {
   const { name, email, age } = user;
@@ -10,4 +8,4 @@ export function userValidator(user: UserModel) {
     email: email.every((e) => e.includes("@")) || "Emails must be valid",
     age: age > 0 || "Age must be a positive number",
   };
-};
+}

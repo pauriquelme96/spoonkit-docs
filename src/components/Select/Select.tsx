@@ -1,7 +1,7 @@
 import { useCtrl } from "../../lib/useCtrl";
 import { SelectCtrl } from "./SelectCtrl";
 
-export function Select({ ctrl }: { ctrl: SelectCtrl<any> }) {
+export function Select({ ctrl }: { ctrl: SelectCtrl<any, any> }) {
   const { self } = useCtrl(ctrl);
 
   const getCurrentIndex = () => {

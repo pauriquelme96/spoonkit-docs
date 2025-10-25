@@ -35,15 +35,13 @@ Spoon propone invertir el flujo de desarrollo:
 - **¿Cuándo se utiliza?**: Cuando necesito definir la estructura de datos que voy a manejar en mi aplicación y crear instancias reactivas para trabajar con estos datos.
 
 ```typescript
-// Definición de la estructura
-interface UserModel {
-  name: string;
-  email: string;
-  age: number;
-}
-
 // Función para crear instancias reactivas del modelo
-const createUserModel = () => state<UserModel>();
+const createUserModel = () =>
+  stateObject({
+    name: state<string>(),
+    email: state<string>(),
+    age: state<number>(),
+  });
 ```
 
 **Utilización**:
@@ -132,12 +130,14 @@ class UserEntity {
 
 ### 2. Capa CTRL ⚙️
 
->TODO: 
+> TODO:
+>
 > - Binding de props con signals
 > - Ctrl complejos
-> - 
+> -
 
-**Responsabilidad**: 
+**Responsabilidad**:
+
 - Orquestan la lógica de negocio
 - Gestionan el estado de los componentes
 - Conectan el **DOMINIO** con la **PRESENTACIÓN**
@@ -175,7 +175,9 @@ class UserFormCtrl extends Ctrl {
 ```
 
 ### 3. Capa PRESENTATION 🎨
->TODO:
+
+> TODO:
+>
 > - [ ] Hooks de uso de ctrl
 > - [ ] Ejemplos de componentes complejos
 > - [ ] useRegister y provider como `context`

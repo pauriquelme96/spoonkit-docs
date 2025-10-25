@@ -1,6 +1,6 @@
 import { state } from "../../lib/signals/State";
-import { stateArray } from "../../lib/signals/stateArray";
-import { stateObject } from "../../lib/signals/stateObject";
+import { stateArray } from "../../lib/signals/StateArray";
+import { stateObject } from "../../lib/signals/StateObject";
 import type { InferModel } from "../../lib/ModelTypes";
 
 // La interfaz ahora se infiere automáticamente del modelo
