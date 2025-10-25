@@ -1,11 +1,6 @@
 import { calc } from "./Calc";
 import { state } from "./State";
-
-export interface StateLike<T = unknown> {
-  get(): T;
-  set?(value: T): void;
-  peek(): T;
-}
+import type { StateLike } from "./StateLike";
 
 type ExtractSetType<T> = T extends { set(value: infer V): void } ? V : never;
 type ExtractGetType<T> = T extends { get(): infer V } ? V : never;
@@ -17,7 +12,9 @@ export function stateArray<T extends StateLike>(fn: () => T) {
   type SetType = ExtractSetType<T>;
   type GetType = ExtractGetType<T>;
 
-  const _value = calc<GetType[]>(() => _signals.get().map((signal) => signal.get() as GetType));
+  const _value = calc<GetType[]>(() =>
+    _signals.get().map((signal) => signal.get() as GetType)
+  );
 
   return {
     get(): GetType[] {
@@ -30,7 +27,7 @@ export function stateArray<T extends StateLike>(fn: () => T) {
       if (!Array.isArray(newValues)) {
         throw new TypeError(
           `stateArray.set() expects an array, but received ${typeof newValues}. ` +
-          `Value: ${JSON.stringify(newValues)}`
+            `Value: ${JSON.stringify(newValues)}`
         );
       }
 
@@ -39,16 +36,14 @@ export function stateArray<T extends StateLike>(fn: () => T) {
 
       newValues.forEach((value, i) => {
         const signal = existingSignals[i] || fn();
-        if (signal.set) {
-          signal.set(value as any);
-        }
+        signal.set(value as any);
         newSignals.push(signal);
       });
 
       _signals.set(newSignals);
     },
     map<R>(mapFn: (item: T, index: number) => R): R[] {
-      if (typeof mapFn !== 'function') {
+      if (typeof mapFn !== "function") {
         throw new TypeError(
           `stateArray.map() expects a function, but received ${typeof mapFn}`
         );
@@ -56,7 +51,7 @@ export function stateArray<T extends StateLike>(fn: () => T) {
       return _signals.get().map(mapFn);
     },
     filter(filterFn: (item: T, index: number) => boolean): T[] {
-      if (typeof filterFn !== 'function') {
+      if (typeof filterFn !== "function") {
         throw new TypeError(
           `stateArray.filter() expects a function, but received ${typeof filterFn}`
         );
@@ -66,9 +61,7 @@ export function stateArray<T extends StateLike>(fn: () => T) {
     push(value: SetType) {
       const existingSignals = _signals.peek();
       const newSignal = fn();
-      if (newSignal.set) {
-        newSignal.set(value as any);
-      }
+      newSignal.set(value as any);
       _signals.set([...existingSignals, newSignal]);
     },
     pop(): SetType | undefined {
