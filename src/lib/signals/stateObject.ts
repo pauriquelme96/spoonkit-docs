@@ -2,11 +2,11 @@ import { calc } from "./Calc";
 import type { StateLike } from "./StateLike";
 
 type ExtractStateTypes<T extends Record<string, StateLike>> = {
-  [K in keyof T]?: T extends { set(value: infer V): void } ? V : never;
+  [K in keyof T]?: T[K] extends { set(value: infer V): void } ? V : never;
 };
 
 type ExtractGetTypes<T extends Record<string, StateLike>> = {
-  [K in keyof T]: T extends { get(): infer V } ? V : never;
+  [K in keyof T]: T[K] extends { get(): infer V } ? V : never;
 };
 
 export type StateObject<T extends Record<string, StateLike>> = ReturnType<
