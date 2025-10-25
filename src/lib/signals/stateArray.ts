@@ -6,6 +6,70 @@ type ExtractSetType<T> = T extends { set(value: infer V): void } ? V : never;
 type ExtractGetType<T> = T extends { get(): infer V } ? V : never;
 
 export type StateArray<T extends StateLike> = ReturnType<typeof stateArray<T>>;
+
+/**
+ * Crea un array reactivo donde cada elemento es un signal independiente, ideal para listas dinámicas.
+ *
+ * Imagina que tienes una lista de usuarios y cada usuario puede cambiar. En vez de un array normal,
+ * esta función te da un array donde cada elemento es un signal reactivo. Cuando agregas, quitas o
+ * modificas elementos, todo se actualiza automáticamente.
+ *
+ * La magia está en que reutiliza los signals cuando haces un `set()`, en lugar de destruir y crear
+ * todo de nuevo. Esto hace que sea súper eficiente, especialmente con listas grandes.
+ *
+ * Lo que te devuelve:
+ * - `get()`: Devuelve el array completo de valores y activa la reactividad
+ * - `peek()`: Devuelve los valores actuales sin activar reactividad
+ * - `set()`: Reemplaza todo el array (reutilizando signals cuando puede)
+ * - `map()`: Recorre cada signal del array (como el map normal pero con signals)
+ * - `filter()`: Filtra signals según una condición
+ * - `push()`: Agrega un elemento al final
+ * - `pop()`: Quita el último elemento y lo devuelve
+ * - `dispose()`: Limpia todo el array
+ *
+ * @template T - El tipo de signal que va a tener cada elemento del array (se infiere de la función que le pasas)
+ * @param {() => T} fn - Una función que crea un nuevo signal cada vez que se necesita agregar un elemento.
+ *                       Por ejemplo: `() => state({ name: "", age: 0 })`
+ *
+ * @returns {Object} Un objeto con métodos para trabajar con el array reactivo:
+ *   - `get()`: Array completo de valores (reactivo)
+ *   - `peek()`: Array de valores sin reactividad
+ *   - `set(newValues)`: Reemplaza todo el array
+ *   - `map(fn)`: Transforma cada signal
+ *   - `filter(fn)`: Filtra signals
+ *   - `push(value)`: Agrega al final
+ *   - `pop()`: Quita del final
+ *   - `dispose()`: Limpia todo
+ *
+ * @throws {TypeError} Si en `set()` no le pasas un array
+ * @throws {TypeError} Si en `map()` o `filter()` no le pasas una función
+ *
+ * @example
+ * ```typescript
+ * // Creamos un array de usuarios
+ * const users = stateArray(() => state({ name: "", age: 0 }));
+ *
+ * // Agregamos algunos usuarios
+ * users.set([
+ *   { name: "Ana", age: 25 },
+ *   { name: "Luis", age: 30 }
+ * ]);
+ *
+ * // Agregamos uno más al final
+ * users.push({ name: "Carlos", age: 28 });
+ *
+ * // Obtenemos todos los valores
+ * const allUsers = users.get(); // [{ name: "Ana", age: 25 }, ...]
+ *
+ * // Trabajamos con los signals individuales
+ * users.map((userSignal, index) => {
+ *   return <UserCard user={userSignal.get()} />;
+ * });
+ *
+ * // Quitamos el último
+ * const removed = users.pop(); // { name: "Carlos", age: 28 }
+ * ```
+ */
 export function stateArray<T extends StateLike>(fn: () => T) {
   // Guardamos un array de signals, cada signal representa un elemento del array
   // Este es el estado interno que mantiene todos los signals individuales
