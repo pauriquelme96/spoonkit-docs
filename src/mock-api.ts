@@ -69,8 +69,8 @@ mock.onPost("/api/users").reply((config) => {
     }
 
     // Validar email único
-    const existingUser = usersDb.find((u) => 
-      u.email.some(e => userData.email?.includes(e))
+    const existingUser = usersDb.find((u) =>
+      u.email.some((e) => userData.email?.includes(e))
     );
     if (existingUser) {
       return [409, { error: "El email ya está en uso." }];
@@ -110,7 +110,7 @@ mock.onPut(/\/api\/users\/\w+/).reply((config) => {
 
     // Validar email único (excluyendo el usuario actual)
     const existingUser = usersDb.find(
-      (u) => u.email.some(e => userData.email?.includes(e)) && u.id !== id
+      (u) => u.email.some((e) => userData.email?.includes(e)) && u.id !== id
     );
     if (existingUser) {
       return [409, { error: "El email ya está en uso." }];
@@ -138,7 +138,8 @@ mock.onPatch(/\/api\/users\/\w+/).reply((config) => {
     // Validar email único si se está actualizando
     if (partialData.email) {
       const existingUser = usersDb.find(
-        (u) => u.email.some(e => partialData.email?.includes(e)) && u.id !== id
+        (u) =>
+          u.email.some((e) => partialData.email?.includes(e)) && u.id !== id
       );
       if (existingUser) {
         return [409, { error: "El email ya está en uso." }];
@@ -177,10 +178,51 @@ mock.onGet("/api/users/search").reply((config) => {
   const filteredUsers = usersDb.filter(
     (user) =>
       user.name.toLowerCase().includes(query) ||
-      user.email.some(e => e.toLowerCase().includes(query))
+      user.email.some((e) => e.toLowerCase().includes(query))
   );
 
   return [200, filteredUsers];
+});
+
+// GET /api/master-data/countries - Obtener lista de países
+mock.onGet("/api/master-data/countries").reply(() => {
+  console.log("Mocking /api/master-data/countries");
+  const countries = [
+    { id: "1", name: "España" },
+    { id: "2", name: "Argentina" },
+    { id: "3", name: "México" },
+    { id: "4", name: "Perú" },
+    { id: "5", name: "Colombia" },
+    { id: "6", name: "Chile" },
+  ];
+
+  return [200, countries];
+});
+
+// GET /api/master-data/cities - Obtener lista de ciudades (con filtro opcional por país)
+mock.onGet("/api/master-data/cities").reply((config) => {
+  console.log("Mocking /api/master-data/cities");
+  const country = config.params?.country;
+
+  const allCities = [
+    { id: "1", name: "Madrid", country: "España" },
+    { id: "2", name: "Barcelona", country: "España" },
+    { id: "3", name: "Valencia", country: "España" },
+    { id: "4", name: "Sevilla", country: "España" },
+    { id: "5", name: "Zaragoza", country: "España" },
+    { id: "6", name: "Buenos Aires", country: "Argentina" },
+    { id: "7", name: "Ciudad de México", country: "México" },
+    { id: "8", name: "Lima", country: "Perú" },
+    { id: "9", name: "Bogotá", country: "Colombia" },
+    { id: "10", name: "Santiago", country: "Chile" },
+  ];
+
+  // Filtrar por país si se proporciona el parámetro
+  const cities = country
+    ? allCities.filter((city) => city.country === country)
+    : allCities;
+
+  return [200, cities];
 });
 
 // Manejar rutas no encontradas
