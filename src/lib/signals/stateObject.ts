@@ -13,8 +13,51 @@ export type StateObject<T extends Record<string, StateLike>> = ReturnType<
   typeof stateObject<T>
 >;
 
-// Función principal que convierte un objeto de estados individuales en un estado de objeto
-// Por ejemplo: { nombre: state("Juan"), edad: state(25) } se convierte en un estado unificado
+/**
+ * Crea un objeto reactivo que agrupa varios signals y te permite trabajar con ellos como uno solo.
+ *
+ * Imagina que tienes varios signals separados (nombre, edad, email) y quieres tratarlos como
+ * un único objeto "usuario". Esta función hace exactamente eso.
+ *
+ * Lo que te devuelve:
+ * - Acceso directo a cada signal individual (por si necesitas cambiar solo uno)
+ * - `get()`: Devuelve objeto con todos los valores actuales y activa la reactividad si se invoca dentro de un `calc` o `monitor`
+ * - `peek()`: Devuelve los valores actuales pero sin activar la reactividad
+ * - `set()`: Actualiza varios signals de golpe pasando un objeto
+ *
+ * Lo mejor de todo es que es reactivo: cuando cambias cualquier signal individual,
+ * el objeto completo se actualiza solo.
+ *
+ * @template T - El tipo de objeto con signals que le pasas, se infiere automáticamente.
+ * @param {T} model - Un objeto donde cada propiedad es un signal (state, stateObject o stateArray)
+ *
+ * @returns {Object} Un objeto que incluye:
+ *   - Todos los signals originales (para que puedas usarlos individualmente)
+ *   - `get()`: Devuelve un objeto fresco con todos los valores (reactivo)
+ *   - `peek()`: Devuelve los valores sin activar reactividad
+ *   - `set(newValue)`: Actualiza varios signals a la vez
+ *
+ * @throws {TypeError} Si no le pasas un objeto válido (null, array, etc.)
+ *
+ * @example
+ * ```typescript
+ * // Creamos un signal para un usuario
+ * const userState = stateObject({
+ *   name: state("John"),
+ *   age: state(30),
+ *   email: state("john@example.com")
+ * });
+ *
+ * // Obtenemos todos los valores juntos
+ * const user = userState.get(); // { name: "John", age: 30, email: "john@example.com" }
+ *
+ * // Actualizamos de forma parcial
+ * userState.set({ name: "Jane", age: 25 });
+ *
+ * // O cambiamos solo uno accediendo de forma individual
+ * userState.name.set("Bob");
+ * ```
+ */
 export function stateObject<T extends Record<string, StateLike>>(model: T) {
   // Validamos que lo que recibimos sea realmente un objeto y no null, undefined o array
   if (!model || typeof model !== "object" || Array.isArray(model)) {
@@ -25,8 +68,8 @@ export function stateObject<T extends Record<string, StateLike>>(model: T) {
     );
   }
 
-  // Creamos un valor calculado que automáticamente se actualiza cuando cambia cualquier estado interno
-  // Este calc() se va a reevaluar cada vez que alguno de los estados del modelo cambie
+  // Creamos un valor calculado que automáticamente se actualiza cuando cambia cualquier signal interno
+  // Este calc() se va a reevaluar cada vez que alguno de los signals del modelo cambie
   const _value = calc<ExtractGetTypes<T>>(() => {
     // Creamos un objeto vacío donde vamos a juntar todos los valores
     const value: Record<string, any> = {};
@@ -79,7 +122,7 @@ export function stateObject<T extends Record<string, StateLike>>(model: T) {
       for (const key in model) {
         // Si el nuevo valor incluye esta propiedad
         if (newValue.hasOwnProperty(key)) {
-          // Actualizamos el estado individual con el nuevo valor
+          // Actualizamos el signal individual con el nuevo valor
           model[key].set(newValue[key]);
         }
       }
