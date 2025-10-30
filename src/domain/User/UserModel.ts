@@ -1,10 +1,11 @@
 import { state } from "../../lib/signals/State";
-import { stateArray } from "../../lib/signals/StateArray";
 import { stateObject } from "../../lib/signals/StateObject";
-import type { InferModel } from "../../lib/ModelTypes";
+import type { Infer } from "../../lib/ModelTypes";
+import { stateArray } from "../../lib/signals/stateArray";
 
 // La interfaz ahora se infiere automáticamente del modelo
-export type UserModel = InferModel<typeof createUserModel>;
+export type iUser = Infer<typeof createUserModel>;
+export type UserModel = ReturnType<typeof createUserModel>;
 
 export const createUserModel = () =>
   stateObject({

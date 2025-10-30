@@ -1,44 +1,38 @@
 import axios from "axios";
-import type { UserModel } from "./UserModel";
+import type { iUser } from "./UserModel";
 
 export class UserApi {
-  public async getUsers(): Promise<(UserModel & { id: string })[]> {
+  public async getUsers(): Promise<(iUser & { id: string })[]> {
     return axios.get("/api/users");
   }
 
-  public async getUserById(
-    userId: string
-  ): Promise<UserModel & { id: string }> {
+  public async getUserById(userId: string): Promise<iUser & { id: string }> {
     return axios.get(`/api/users/${userId}`);
   }
 
-  public async searchUsers(
-    query: string
-  ): Promise<(UserModel & { id: string })[]> {
+  public async searchUsers(query: string): Promise<(iUser & { id: string })[]> {
     return axios.get("/api/users/search", { params: { q: query } });
   }
 
-  public async createUser(
-    user: UserModel
-  ): Promise<UserModel & { id: string }> {
+  public async createUser(user: iUser): Promise<iUser & { id: string }> {
     return axios.post("/api/users", user);
   }
 
   public async updateUser(
     userId: string,
-    user: UserModel
-  ): Promise<UserModel & { id: string }> {
+    user: iUser
+  ): Promise<iUser & { id: string }> {
     return axios.put(`/api/users/${userId}`, user);
   }
 
   public async patchUser(
     userId: string,
-    user: Partial<UserModel>
-  ): Promise<UserModel & { id: string }> {
+    user: Partial<iUser>
+  ): Promise<iUser & { id: string }> {
     return axios.patch(`/api/users/${userId}`, user);
   }
 
-  public async deleteUser(userId: string): Promise<UserModel & { id: string }> {
+  public async deleteUser(userId: string): Promise<iUser & { id: string }> {
     return axios.delete(`/api/users/${userId}`);
   }
 }

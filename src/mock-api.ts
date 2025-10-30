@@ -1,12 +1,12 @@
 import axios from "axios";
 import MockAdapter from "axios-mock-adapter";
-import type { UserModel } from "./domain/User/UserModel";
+import type { iUser } from "./domain/User/UserModel";
 
 // Crear una instancia del mock adapter con delay de 500ms
 const mock = new MockAdapter(axios, { delayResponse: 500 });
 
 // Base de datos falsa de usuarios
-let usersDb: (UserModel & { id: string })[] = [
+let usersDb: (iUser & { id: string })[] = [
   {
     id: "1",
     name: "Juan Pérez",
@@ -58,7 +58,7 @@ mock.onGet(/\/api\/users\/\d+/).reply((config) => {
 // POST /users - Crear un nuevo usuario
 mock.onPost("/api/users").reply((config) => {
   try {
-    const userData = JSON.parse(config.data) as UserModel;
+    const userData = JSON.parse(config.data) as iUser;
 
     // Validar datos básicos
     if (!userData.name || !userData.email || !userData.age) {
@@ -93,7 +93,7 @@ mock.onPost("/api/users").reply((config) => {
 mock.onPut(/\/api\/users\/\w+/).reply((config) => {
   try {
     const id = config.url?.split("/").pop();
-    const userData = JSON.parse(config.data) as UserModel;
+    const userData = JSON.parse(config.data) as iUser;
     const userIndex = usersDb.findIndex((u) => u.id === id);
 
     if (userIndex === -1) {
@@ -128,7 +128,7 @@ mock.onPut(/\/api\/users\/\w+/).reply((config) => {
 mock.onPatch(/\/api\/users\/\w+/).reply((config) => {
   try {
     const id = config.url?.split("/").pop();
-    const partialData = JSON.parse(config.data) as Partial<UserModel>;
+    const partialData = JSON.parse(config.data) as Partial<iUser>;
     const userIndex = usersDb.findIndex((u) => u.id === id);
 
     if (userIndex === -1) {

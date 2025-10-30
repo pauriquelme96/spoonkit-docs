@@ -1,6 +1,6 @@
-import type { UserModel } from "./UserModel";
+import type { iUser } from "./UserModel";
 
-export function userValidator(user: UserModel) {
+export function userValidator(user: iUser) {
   const { name, email, age } = user;
 
   return {

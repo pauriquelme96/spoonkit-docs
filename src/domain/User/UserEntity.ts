@@ -1,6 +1,6 @@
 import { provide } from "../../lib/provider";
 import { UserApi } from "./UserApi";
-import { createUserModel, type UserModel } from "./UserModel";
+import { createUserModel, type iUser } from "./UserModel";
 import { userValidator } from "./UserValidator";
 import { calc } from "../../lib/signals/Calc";
 
@@ -9,7 +9,7 @@ export class UserEntity {
   public model = createUserModel();
   public validation = calc(() => userValidator(this.model.get()));
 
-  constructor(user: UserModel) {
+  constructor(user: iUser) {
     this.model.set(user);
   }
 
