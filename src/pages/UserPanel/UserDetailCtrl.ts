@@ -7,28 +7,28 @@ import { ButtonCtrl } from "../../components/Button/ButtonCtrl";
 export class UserDetailCtrl extends Ctrl {
   public onClose = emitter<void>();
 
-  public nameInput = new InputCtrl<string>().set(() => ({
+  public nameInput = new InputCtrl<string>().set({
     label: "Name",
     placeholder: "Enter user name",
     type: "text",
     value: this.user.model.name,
-  }));
+  });
 
-  public ageInput = new InputCtrl<number>().set(() => ({
+  public ageInput = new InputCtrl<number>().set({
     label: "Age",
     placeholder: "Enter user age",
     type: "number",
     value: this.user.model.age,
-  }));
+  });
 
-  public saveButton = new ButtonCtrl().set(() => ({
+  public saveButton = new ButtonCtrl().set({
     label: "Save",
     variant: "primary",
     onClick: async () => {
       await this.user.save();
       this.onClose.next();
     },
-  }));
+  });
 
   constructor(private user: UserEntity) {
     super();
