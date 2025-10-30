@@ -26,7 +26,7 @@ type ExtractSetType<T> = T extends { set(value: infer V): void } ? V : never;
  * // Result: { id: string; name: string; email: string[]; age: number; }
  * ```
  */
-export type InferModel<T> = T extends (...args: any[]) => infer R
+export type Infer<T> = T extends (...args: any[]) => infer R
   ? R extends {
       get(): infer M;
       peek(): any;
