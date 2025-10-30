@@ -34,6 +34,9 @@ export function stateArray<T extends StateLike>(
  * cambia su estructura (añadir/quitar elementos) y de cada elemento individual cuando
  * cambia su valor.
  *
+ * StateArray extiende de State, por lo que puedes usarlo en cualquier lugar donde se espere
+ * un State.
+ *
  * La diferencia clave con un `state([1, 2, 3])` normal es la granularidad: con un state
  * normal solo puedes reemplazar el array completo, mientras que con StateArray puedes
  * editar cada posición del array como un signal independiente. Además, incluye métodos
