@@ -49,9 +49,8 @@ export function useCtrl<T extends Ctrl>(
     };
   }, []);
 
-  //console.log("DEBUG RENDERS", self?.constructor?.name, props);
+  //console.log("DEBUG RENDERS", ctrl?.constructor?.name, _state);
 
-  // TODO: Review this typing errors when removing as any
   return {
     self: ctrl,
     state: _state,

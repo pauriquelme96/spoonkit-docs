@@ -156,6 +156,23 @@ export class StateArray<T extends StateLike> extends State<any> {
     return signals.at(index);
   }
 
+  public reduce<U>(
+    reducer: (
+      accumulator: U,
+      currentValue: ExtractValue<T>,
+      currentIndex: number,
+      array: ExtractValue<T>[]
+    ) => U,
+    initialValue: U
+  ): Calc<U> {
+    const values = this.get();
+    return calc(() => values.reduce(reducer, initialValue));
+  }
+
+  public join(separator: string): Calc<string> {
+    return calc(() => this.get().join(separator));
+  }
+
   public length(): Calc<number> {
     return calc(() => this.signals.get().length);
   }

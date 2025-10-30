@@ -14,7 +14,7 @@ export function Button({ ctrl }: { ctrl: ButtonCtrl }) {
         self.onClick.next();
       }}
     >
-      {self.loading.get() ? "..." : self.label.get()}
+      {self.loading.get() ? "Loading..." : self.label.get()}
     </button>
   );
 }

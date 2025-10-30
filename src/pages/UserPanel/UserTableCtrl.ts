@@ -28,7 +28,7 @@ export class UserTableCtrl extends TableCtrl<UserEntity> {
 
     return {
       id: new LabelCtrl().set({
-        text: id.get(),
+        text: id,
       }),
       name: new LabelCtrl().set({
         text: name,
