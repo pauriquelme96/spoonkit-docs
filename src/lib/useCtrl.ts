@@ -1,47 +1,60 @@
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Ctrl } from "./Ctrl";
+import type { Class } from "./types/Class.type";
 import type { PropModel } from "./PropTypes";
+import type { UseCtrlHook } from "./types/UseCtrlHook.type";
+import { state } from "./signals/State";
 import { monitor } from "./signals/Monitor";
 import { equal } from "./equal";
-
-export type Class<T> = (new (...args: unknown[]) => T) & { prototype: T };
 
 export function useCtrl<T extends Ctrl>(
   ctrlToken: Class<T> | T,
   initProps: PropModel<T> = {}
-) {
-  const selfRef = useRef<T | null>(null);
-  const skip = useRef(true);
-  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
+): UseCtrlHook<T> {
+  // -------------------------
+  // INIT CTRL
+  // -------------------------
+  const [ctrl] = useState<Ctrl>(() => {
+    const instance = ctrlToken instanceof Ctrl ? ctrlToken : new ctrlToken();
+    instance.set(initProps);
+    return instance;
+  });
 
-  if (selfRef.current === null) {
-    selfRef.current = ctrlToken instanceof Ctrl ? ctrlToken : new ctrlToken();
-    selfRef.current.set(initProps ?? {});
-  }
+  // -------------------------
+  // INIT SELF
+  // -------------------------
+  const [_state, setState] = useState(() => ctrl.get());
 
+  // -------------------------
+  // BIND LIFECYCLE & PROP CHANGES
+  // -------------------------
   useEffect(() => {
-    if (skip.current) {
-      skip.current = false;
-      return;
-    }
+    ctrl.onStart.next(ctrl);
 
-    selfRef.current?.onStart.next(selfRef.current);
-
-    let lastState: any = {};
+    let skipFirst = state(true);
+    let lastState: any = _state;
     const dispose = monitor(() => {
-      const props = selfRef.current?.get();
-      if (equal(lastState, props)) return;
-      lastState = props;
-      forceUpdate();
+      if (skipFirst.get()) skipFirst.set(false);
+      else {
+        const props = ctrl.get();
+        if (equal(lastState, props)) return;
+        lastState = props;
+        setState(props);
+      }
     });
 
     return () => {
+      ctrl.onDestroy.next();
       dispose();
-      selfRef.current?.onDestroy.next();
     };
   }, []);
 
+  //console.log("DEBUG RENDERS", self?.constructor?.name, props);
+
+  // TODO: Review this typing errors when removing as any
   return {
-    self: selfRef.current,
-  };
+    self: ctrl,
+    state: _state,
+    setState: (props) => ctrl.set(props),
+  } as any;
 }
