@@ -1,4 +1,4 @@
-import { calc } from "./Calc";
+import { Calc, calc } from "./Calc";
 import { State, state } from "./State";
 import type { StateLike } from "./StateLike";
 
@@ -6,8 +6,11 @@ type ExtractValue<T extends StateLike> = T extends { get(): infer V }
   ? V
   : never;
 
-export function stateArray<T extends StateLike>(fn: () => T): StateArray<T> {
-  return new StateArray<T>(fn);
+export function stateArray<T extends StateLike>(
+  fn: () => T,
+  initSignals: T[] = []
+): StateArray<T> {
+  return new StateArray<T>(fn, initSignals);
 }
 
 export class StateArray<T extends StateLike> extends State<any> {
@@ -21,9 +24,11 @@ export class StateArray<T extends StateLike> extends State<any> {
       value: ExtractValue<T>,
       index: number,
       array: ExtractValue<T>[]
-    ) => T
+    ) => T,
+    initSignals: T[] = []
   ) {
     super();
+    this.signals.set(initSignals);
   }
 
   public override get(): ExtractValue<T>[] {
@@ -80,17 +85,18 @@ export class StateArray<T extends StateLike> extends State<any> {
 
   public filter(
     filterFn: (item: ExtractValue<T>, index: number) => boolean
-  ): T[] {
+  ): StateArray<T> {
     if (typeof filterFn !== "function") {
       throw new TypeError(
         `stateArray.filter() expects a function, but received ${typeof filterFn}`
       );
     }
-    const currentValues = this.get();
 
-    const filteredValues = currentValues.filter(filterFn);
+    const filteredSignals = this.signals.get().filter((signal, index) => {
+      return filterFn(signal.peek() as ExtractValue<T>, index);
+    });
 
-    return this.signals.get().filter(filterFn);
+    return new StateArray<T>(this.fn, filteredSignals);
   }
 
   public push(value: ExtractValue<T>) {
@@ -115,5 +121,14 @@ export class StateArray<T extends StateLike> extends State<any> {
 
   public toArray(): T[] {
     return [...this.signals.get()];
+  }
+
+  public at(index: number): T | undefined {
+    const signals = this.signals.get();
+    return signals.at(index);
+  }
+
+  public length(): Calc<number> {
+    return calc(() => this.signals.get().length);
   }
 }
