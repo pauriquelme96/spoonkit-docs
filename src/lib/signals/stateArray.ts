@@ -123,6 +123,34 @@ export class StateArray<T extends StateLike> extends State<any> {
     return [...this.signals.get()];
   }
 
+  public some(
+    fn: (item: ExtractValue<T>, index: number) => boolean
+  ): Calc<boolean> {
+    return calc(() =>
+      this.signals
+        .get()
+        .some((signal, index) => fn(signal.peek() as ExtractValue<T>, index))
+    );
+  }
+
+  public every(
+    fn: (item: ExtractValue<T>, index: number) => boolean
+  ): Calc<boolean> {
+    return calc(() =>
+      this.signals
+        .get()
+        .every((signal, index) => fn(signal.peek() as ExtractValue<T>, index))
+    );
+  }
+
+  public find(
+    fn: (item: ExtractValue<T>, index: number) => boolean
+  ): T | undefined {
+    return this.signals
+      .get()
+      .find((signal, index) => fn(signal.peek() as ExtractValue<T>, index));
+  }
+
   public at(index: number): T | undefined {
     const signals = this.signals.get();
     return signals.at(index);
@@ -130,5 +158,9 @@ export class StateArray<T extends StateLike> extends State<any> {
 
   public length(): Calc<number> {
     return calc(() => this.signals.get().length);
+  }
+
+  public clear() {
+    this.signals.set([]);
   }
 }
