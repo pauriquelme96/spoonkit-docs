@@ -1,7 +1,9 @@
 import type { ComponentType } from "react";
 import type { PropModel } from "./PropTypes";
 import { $batch } from "./signals/$batch";
-import { Emitter, emitter } from "./signals/Emitter";
+import { Calc } from "./signals/Calc";
+import { emitter, Emitter } from "./signals/Emitter";
+import { State } from "./signals/State";
 
 export class Ctrl {
   component?: ComponentType<any>;
@@ -29,15 +31,10 @@ export class Ctrl {
 
     $batch(() => {
       for (const key in props) {
-        const value = props[key];
-        const target = this[key];
-
-        if (target instanceof Emitter && typeof value === "function") {
-          // Si es un Emitter y el valor es una función, suscribirse
-          target.subscribe(value as any);
-        } else if (target?.set instanceof Function) {
-          // Si tiene método set (State o Calc), usar set
-          target.set(value);
+        if (this[key] instanceof State) {
+          this[key].set(props[key]);
+        } else if (this[key] instanceof Emitter) {
+          this[key].subscribe(props[key]);
         }
       }
     });
@@ -50,8 +47,8 @@ export class Ctrl {
     const values = {} as PropModel<this>;
 
     for (const key in this) {
-      if (this[key]["get"] instanceof Function) {
-        values[key as string] = this[key]["get"]();
+      if (this[key] instanceof State || this[key] instanceof Calc) {
+        values[key as string] = this[key].get();
       }
     }
 
