@@ -1,8 +1,8 @@
-import { Ctrl } from "../../lib/Ctrl";
-import { emitter } from "../../lib/signals/Emitter";
-import { InputCtrl } from "../../components/Input/InputCtrl";
-import type { UserEntity } from "../../domain/User/UserEntity";
-import { ButtonCtrl } from "../../components/Button/ButtonCtrl";
+import { Ctrl } from "../../../lib/Ctrl";
+import { emitter } from "../../../lib/signals/Emitter";
+import { InputCtrl } from "../../../components/Input/InputCtrl";
+import type { UserEntity } from "../../../domain/User/UserEntity";
+import { ButtonCtrl } from "../../../components/Button/ButtonCtrl";
 
 export class UserDetailCtrl extends Ctrl {
   public onClose = emitter<void>();

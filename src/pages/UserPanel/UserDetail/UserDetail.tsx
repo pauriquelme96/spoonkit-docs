@@ -1,7 +1,7 @@
-import { useCtrl } from "../../lib/useCtrl";
+import { useCtrl } from "../../../lib/useCtrl";
 import { UserDetailCtrl } from "./UserDetailCtrl";
-import { Input } from "../../components/Input/Input";
-import { Button } from "../../components/Button/Button";
+import { Input } from "../../../components/Input/Input";
+import { Button } from "../../../components/Button/Button";
 
 interface UserDetailProps {
   ctrl: UserDetailCtrl;

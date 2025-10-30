@@ -1,7 +1,7 @@
 import "./App.css";
 import "./dependencies";
-import { UserPanel } from "./pages/UserPanel/UserPanel";
 import axios from "axios";
+import { UserPanel } from "./pages/UserPanel/UserPanel";
 
 axios.interceptors.response.use(
   (res) => res.data,
@@ -10,6 +10,7 @@ axios.interceptors.response.use(
 
 function App() {
   return <UserPanel />;
+  //return <div>Hello World!</div>;
 }
 
 export default App;
