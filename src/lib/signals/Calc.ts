@@ -1,106 +1,131 @@
 import { computed, type ReadonlySignal } from "@preact/signals-core";
 
 /**
- * Crea un valor calculado que se actualiza automáticamente cuando cambian sus dependencias.
+ * Crea un nuevo Calc con una función de cálculo.
  *
- * Un calc es como una fórmula de Excel: defines cómo se calcula un valor basándote en
- * otros signals, y cuando esos signals cambian, el calc se recalcula solo.
+ * Esta es la forma recomendada de crear Calcs. Nunca uses `new Calc()` directamente,
+ * siempre usa esta función factory.
  *
- * Lo interesante es que el calc detecta automáticamente de qué signals depende.
- * Solo tienes que usar `get()` dentro de la función y el sistema se encarga del resto.
+ * @template T - El tipo de valor que devuelve el cálculo, se infiere automáticamente
+ * @param fn - Función que calcula el valor. Se re-ejecuta automáticamente cuando cambian sus dependencias
+ * @returns Un nuevo Calc inicializado con la función de cálculo
  *
- * Los calcs son de solo lectura: no puedes cambiar su valor directamente con `set()`,
- * solo cambia cuando cambian los signals de los que depende.
- *
- * @template T - El tipo de valor que devuelve el cálculo, se infiere automáticamente.
- * @param {() => T} fn - La función que calcula el valor. Cada vez que algún signal
- *   que leas dentro de esta función (usando `get()`) cambie, la función se volverá
- *   a ejecutar automáticamente.
- *
- * @returns {Calc<T>} Una instancia de Calc con estos métodos:
- *   - `get()`: Lee el valor calculado de forma reactiva
- *   - `peek()`: Lee el valor sin activar reactividad
- *
- * @example
- * ```typescript
- * // Ejemplo básico: suma reactiva
- * const a = state(5);
- * const b = state(10);
- * const suma = calc(() => a.get() + b.get());
- *
- * console.log(suma.get()); // 15
- * a.set(20);
- * console.log(suma.get()); // 30 (se recalculó automáticamente)
- *
- * // Ejemplo más complejo: nombre completo
- * const nombre = state("Juan");
- * const apellido = state("Pérez");
- * const nombreCompleto = calc(() => `${nombre.get()} ${apellido.get()}`);
- *
- * console.log(nombreCompleto.get()); // "Juan Pérez"
- * nombre.set("María");
- * console.log(nombreCompleto.get()); // "María Pérez"
- *
- * // Ejemplo con lógica condicional
- * const edad = state(15);
- * const esMayorDeEdad = calc(() => edad.get() >= 18);
- *
- * console.log(esMayorDeEdad.get()); // false
- * edad.set(20);
- * console.log(esMayorDeEdad.get()); // true
- *
- * // Los calcs se pueden encadenar
- * const precio = state(100);
- * const descuento = state(0.2);
- * const precioConDescuento = calc(() => precio.get() * (1 - descuento.get()));
- * const precioFinal = calc(() => precioConDescuento.get() * 1.21); // Con IVA
- *
- * console.log(precioFinal.get()); // 96.8
- * ```
+ * @see {@link Calc} - Documentación completa de la clase Calc
  */
 export const calc = <T>(fn: () => T) => new Calc<T>(fn);
 
 /**
- * Clase base para crear valores calculados reactivos en Spoonkit.
+ * Valor calculado que se actualiza automáticamente cuando cambian sus dependencias.
  *
- * Un Calc representa un valor que se deriva de otros signals y se mantiene
- * automáticamente actualizado. Es la forma de crear valores computados que
- * reaccionan a cambios en sus dependencias.
+ * Calc es como una fórmula de Excel en tu código: defines cómo se calcula un valor
+ * basándote en otros signals, y cuando esos signals cambian, el Calc se recalcula
+ * automáticamente. La magia está en que detecta por sí mismo de qué signals depende,
+ * solo con que uses `get()` dentro de la función de cálculo.
  *
- * Características principales:
- * - **Solo lectura**: No puedes modificar un calc directamente, solo cambia cuando cambian sus dependencias
- * - **Auto-actualizable**: Se recalcula solo cuando alguna de sus dependencias cambia
- * - **Lazy**: Solo se ejecuta cuando alguien lee su valor (con `get()`)
- * - **Eficiente**: Cachea el resultado y solo recalcula cuando es necesario
- * - **Detección automática**: No necesitas declarar de qué signals depende, lo detecta solo
+ * Los Calcs son de solo lectura: no puedes cambiar su valor directamente, solo cambia
+ * cuando cambian los signals de los que depende. Esto garantiza que el valor calculado
+ * siempre esté sincronizado con sus dependencias.
  *
- * Normalmente no usas `new Calc()` directamente, sino la función helper `calc()`,
- * que es más cómoda.
+ * **¿Cuándo usar Calc?**
+ * - Para valores derivados de otros signals: validaciones, transformaciones, agregaciones
+ * - Para lógica de interfaz que depende del estado: habilitar/deshabilitar botones, títulos dinámicos
+ * - Para optimizar rendimiento: cachean el resultado y solo recalculan cuando es necesario
+ * - Para mantener consistencia: el valor calculado siempre está actualizado automáticamente
+ * - Como fuente de verdad derivada: otros Calcs y monitores pueden depender de este
  *
- * @template T - El tipo del valor calculado
+ * **Características principales:**
+ * - **Solo lectura**: No se puede modificar directamente (no tiene `set()`), solo a través de sus dependencias
+ * - **Lazy evaluation**: Solo se ejecuta cuando alguien lee su valor con `get()`, no antes
+ * - **Auto-actualizable**: Se recalcula automáticamente cuando alguna de sus dependencias cambia
+ * - **Caché eficiente**: Almacena el resultado y solo recalcula cuando es necesario
+ * - **Detección automática**: No necesitas declarar las dependencias, las detecta solo
+ * - **Encadenable**: Puedes crear Calcs que dependan de otros Calcs
+ *
+ * @template T - El tipo de valor que devuelve el cálculo. Puede ser cualquier cosa: number,
+ *   string, boolean, objetos, arrays, etc.
  *
  * @example
  * ```typescript
- * // Crear un calc (lo normal es usar la función calc() en vez de new Calc())
- * const nombre = state("Ana");
- * const apellido = state("García");
- * const nombreCompleto = new Calc(() => `${nombre.get()} ${apellido.get()}`);
+ * // Título que cambia según el estado de carga
+ * const loading = state(false);
+ * const title = calc(() =>
+ *   loading.get() ? "Cargando usuarios..." : "Gestión de Usuarios"
+ * );
  *
- * // Leer el valor de forma reactiva
- * monitor(() => {
- *   console.log(`Hola ${nombreCompleto.get()}`); // Se ejecuta cada vez que el calc cambia
+ * console.log(title.get()); // "Gestión de Usuarios"
+ *
+ * loading.set(true);
+ * console.log(title.get()); // "Cargando usuarios..." (se recalculó automáticamente)
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // Validaciones que se actualizan automáticamente con el input del usuario
+ * const name = state("");
+ * const age = state(0);
+ *
+ * // Cada validación es un Calc que devuelve un mensaje de error o undefined
+ * const nameError = calc(() => {
+ *   const value = name.get();
+ *   if (value.length === 0) return "El nombre no puede estar vacío";
  * });
  *
- * // Al cambiar alguna dependencia, el calc se recalcula
- * nombre.set("Luis"); // El monitor se dispara con el nuevo nombre completo
+ * const ageError = calc(() => {
+ *   const value = age.get();
+ *   if (value <= 0) return "La edad debe ser un número positivo";
+ * });
  *
- * // Leer sin activar reactividad
- * const valorActual = nombreCompleto.peek(); // Solo lee, no se suscribe
+ * console.log(nameError.get()); // "El nombre no puede estar vacío"
  *
- * // Los calcs se pueden usar como dependencias de otros calcs
- * const saludo = new Calc(() => `Buenos días, ${nombreCompleto.get()}`);
- * console.log(saludo.get()); // "Buenos días, Luis García"
+ * name.set("Ana");
+ * console.log(nameError.get()); // undefined (válido ahora)
+ *
+ * age.set(25);
+ * console.log(ageError.get()); // undefined (válido ahora)
  * ```
+ *
+ * @example
+ * ```typescript
+ * // Caso real: botón de guardar que se habilita solo si no hay errores
+ * const user = stateObject({
+ *   name: state(""),
+ *   email: state(""),
+ *   age: state(0)
+ * });
+ *
+ * // Validaciones (Calcs que devuelven errores)
+ * const validations = {
+ *   name: calc(() => user.name.get().length === 0 ? "Nombre requerido" : undefined),
+ *   email: calc(() => !user.email.get().includes("@") ? "Email inválido" : undefined),
+ *   age: calc(() => user.age.get() <= 0 ? "Edad debe ser positiva" : undefined)
+ * };
+ *
+ * // Calc que verifica si hay algún error
+ * const hasErrors = calc(() =>
+ *   Object.values(validations).some(validation => !!validation.get())
+ * );
+ *
+ * // Configuración del botón (disabled depende de hasErrors)
+ * const saveButton = new ButtonCtrl().set({
+ *   label: "Guardar",
+ *   disabled: hasErrors, // Se habilita/deshabilita automáticamente
+ *   onClick: () => console.log("Usuario guardado")
+ * });
+ *
+ * console.log(hasErrors.get()); // true (hay errores)
+ *
+ * // El usuario completa el formulario
+ * user.name.set("Ana");
+ * user.email.set("ana@example.com");
+ * user.age.set(25);
+ *
+ * console.log(hasErrors.get()); // false (sin errores, botón habilitado)
+ * ```
+ *
+ * @see {@link calc} - Función factory recomendada para crear Calcs
+ * @see {@link State} - Para valores que puedes modificar directamente
+ * @see {@link monitor} - Para ejecutar efectos secundarios cuando cambian los Calcs
+ * @see {@link stateObject} - Para crear objetos reactivos con Calcs como propiedades
  */
 export class Calc<T> {
   // El computed signal interno que contiene el valor calculado
@@ -108,63 +133,34 @@ export class Calc<T> {
   private self: ReadonlySignal<T>;
 
   /**
-   * Obtiene el valor calculado actual de forma reactiva.
+   * Lee el valor calculado actual de forma reactiva.
    *
-   * Si llamas a `get()` dentro de un `monitor()` o de otro `calc()`, se crea
-   * automáticamente una dependencia: cuando este calc se recalcule (porque cambió
-   * alguna de sus dependencias), el monitor o calc que lo está leyendo también
+   * Cuando llamas a `get()` dentro de un `calc()` o `monitor()`, automáticamente
+   * te suscribes a este Calc. Cada vez que el valor se recalcule (porque cambió
+   * alguna de sus dependencias), el calc o monitor que lo está leyendo también
    * se volverá a ejecutar.
    *
-   * El calc es "lazy": la primera vez que llamas a `get()` ejecuta la función
+   * El Calc es lazy: la primera vez que llamas a `get()` ejecuta la función
    * de cálculo. Después cachea el resultado y solo lo recalcula cuando alguna
    * de sus dependencias cambia.
    *
-   * @returns {T} El valor calculado actual
-   *
-   * @example
-   * ```typescript
-   * const precio = state(100);
-   * const iva = state(0.21);
-   * const precioConIva = calc(() => precio.get() * (1 + iva.get()));
-   *
-   * // Lectura reactiva: se ejecuta cada vez que el calc cambia
-   * monitor(() => {
-   *   console.log(`Precio final: ${precioConIva.get()}`);
-   * });
-   *
-   * precio.set(200); // El monitor se dispara porque el calc cambió
-   * ```
+   * @returns El valor calculado actual
    */
   public get() {
     return this.self.value;
   }
 
   /**
-   * Obtiene el valor calculado actual sin activar la reactividad.
+   * Lee el valor calculado actual sin activar reactividad.
    *
-   * A diferencia de `get()`, cuando llamas a `peek()` dentro de un monitor o calc,
-   * NO se crea ninguna dependencia. Es útil cuando solo quieres leer el valor
-   * calculado sin que se disparen reacciones automáticas.
+   * A diferencia de `get()`, `peek()` NO te suscribe al Calc. Úsalo cuando solo
+   * necesites leer el valor sin que tu calc o monitor se vuelva a ejecutar cuando
+   * este Calc cambie.
    *
-   * @returns {T} El valor calculado actual
+   * Casos de uso típicos: logging, debugging, evitar dependencias circulares,
+   * o leer valores opcionales que no deberían disparar recálculos.
    *
-   * @example
-   * ```typescript
-   * const a = state(5);
-   * const b = state(10);
-   * const suma = calc(() => a.get() + b.get());
-   * const multiplicador = calc(() => suma.get() * 2);
-   *
-   * // Este calc solo se reejecuta cuando a cambia, no cuando suma cambia
-   * const resultado = calc(() => {
-   *   const valorA = a.get();           // Reactivo: crea dependencia
-   *   const valorSuma = suma.peek();    // No reactivo: solo lee
-   *   return valorA * valorSuma;
-   * });
-   *
-   * b.set(20);  // suma cambia, pero resultado NO se recalcula
-   * a.set(10);  // resultado SÍ se recalcula
-   * ```
+   * @returns El valor calculado actual
    */
   public peek() {
     return this.self.peek();
@@ -173,37 +169,13 @@ export class Calc<T> {
   /**
    * Construye un nuevo Calc con la función de cálculo proporcionada.
    *
-   * El constructor crea un computed signal de Preact que se encarga automáticamente
-   * de toda la magia reactiva: detectar dependencias, suscribirse a ellas, y
-   * recalcular cuando sea necesario.
+   * No uses este constructor directamente, utiliza la función factory `calc()` en su lugar.
    *
-   * @param {() => T} calcFn - La función que calcula el valor. Esta función se ejecuta:
+   * @param calcFn - La función que calcula el valor. Se ejecuta:
    *   - La primera vez que alguien lee el valor con `get()`
    *   - Cada vez que cambia algún signal del que depende (que haya leído con `get()`)
-   *
-   * @example
-   * ```typescript
-   * const precio = state(100);
-   * const descuento = state(0.15);
-   *
-   * // El constructor recibe la función de cálculo
-   * const precioFinal = new Calc(() => {
-   *   // Dentro de esta función, cada get() que uses crea una dependencia automática
-   *   const p = precio.get();
-   *   const d = descuento.get();
-   *   return p * (1 - d);
-   * });
-   *
-   * // Ahora el calc está listo para usarse
-   * console.log(precioFinal.get()); // 85
-   * ```
    */
   constructor(calcFn: () => T) {
-    // Creamos un computed signal de Preact con la función que nos pasan
-    // Este computed se encarga automáticamente de:
-    // 1. Ejecutar la función y detectar qué signals lee
-    // 2. Suscribirse a esos signals
-    // 3. Recalcular el valor cuando alguno de esos signals cambie
     this.self = computed(calcFn);
   }
 }
