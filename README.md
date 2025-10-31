@@ -1,6 +1,8 @@
 # SpoonKit - Arquitectura Spoon para React
 
-Este proyecto utiliza **Arquitectura Spoon**, un patrón arquitectónico moderno para aplicaciones cliente que propone una separación clara de responsabilidades mediante tres capas bien definidas: **Domain**, **Ctrl** y **Presentation**.
+Este proyecto es un **ejemplo demostrativo** de la **Arquitectura Spoon**, un patrón arquitectónico moderno para aplicaciones cliente que propone una separación clara de responsabilidades mediante tres capas bien definidas: **Domain**, **Ctrl** y **Presentation**.
+
+Su estructura y código tienen como objetivo ejemplificar cómo funciona esta arquitectura en la práctica.
 
 Construido con React + TypeScript + Vite.
 
