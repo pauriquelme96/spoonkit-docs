@@ -1,5 +1,8 @@
 # SpoonKit - Arquitectura Spoon para React
 
+> [!IMPORTANT]
+> **Cambios Importantes en la API**: SpoonKit ha sido simplificado significativamente. Si estás migrando desde versiones anteriores o quieres conocer las características deprecated, consulta el [Changelog](./docs/CHANGE_LOG.md).
+
 Este proyecto es un **ejemplo demostrativo** de la **Arquitectura Spoon**, un patrón arquitectónico moderno para aplicaciones cliente que propone una separación clara de responsabilidades mediante tres capas bien definidas: **Domain**, **Ctrl** y **Presentation**.
 
 Su estructura y código tienen como objetivo ejemplificar cómo funciona esta arquitectura en la práctica.
