@@ -25,7 +25,7 @@
  */
 
 import { State, state } from "../State";
-import { stateArray } from "../StateArray";
+import { stateArray } from "../stateArray";
 
 // ============================================================================
 // ✅ VALID CASES - These should NOT produce errors

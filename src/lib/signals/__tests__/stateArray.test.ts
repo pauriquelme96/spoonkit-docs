@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { stateArray } from "../StateArray";
-import type { StateLike } from "../StateArray";
+import { stateArray } from "../stateArray";
+import type { StateLike } from "../StateLike";
 import { state } from "../State";
 import { calc } from "../Calc";
-import { stateObject } from "../StateObject";
+import { stateObject } from "../stateObject";
 
 describe("stateArray", () => {
   describe("Basic functionality", () => {

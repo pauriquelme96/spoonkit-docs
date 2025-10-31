@@ -8,13 +8,14 @@ export type UseCtrlHook<T> = {
   setState: (values: PropValues<T>) => void;
 };
 
+// @ts-expect-error - Utility type, may be used in future
 type Self<T> = Omit<
   {
     [K in keyof T as T[K] extends State<any>
-      ? never
-      : T[K] extends Calc<any>
-      ? never
-      : K]: T[K];
+    ? never
+    : T[K] extends Calc<any>
+    ? never
+    : K]: T[K];
   },
   "key" | "set" | "get" | "ctrlStart" | "ctrlDestroy"
 >;

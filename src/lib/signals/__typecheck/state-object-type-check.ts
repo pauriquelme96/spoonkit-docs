@@ -25,7 +25,7 @@
  */
 
 import { State, state } from "../State";
-import { stateObject } from "../StateObject";
+import { stateObject } from "../stateObject";
 
 // ============================================================================
 // ✅ VALID CASES - These should NOT produce errors
