@@ -33,6 +33,23 @@ Para más información sobre la arquitectura, consulta:
 - [Arquitectura Spoon](./docs/ARQUITECTURA_SPOON.md) - Guía completa
 - [Signals Cheatsheet](./docs/SIGNALS_CHEATSHEET.md) - Referencia rápida de signals
 
+#### 📖 Documentación API (TypeDoc)
+
+La documentación completa de la API del sistema de signals está disponible en formato TypeDoc:
+
+```bash
+# Generar documentación
+npm run docs
+
+# Generar y ver en modo watch
+npm run docs:watch
+
+# Generar, servir y ver en modo watch
+npm run docs:serve
+```
+
+La documentación se genera en la carpeta `docs-output/`. Abre `docs-output/index.html` en tu navegador para consultarla.
+
 ## Configuración del Proyecto
 
 Currently, two official plugins are available:
