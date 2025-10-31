@@ -127,12 +127,23 @@ Este sistema permite desacoplar las capas y facilitar el testing al poder reempl
 - **¿Cuándo se utiliza?**: Cuando necesito definir la estructura de datos que voy a manejar en mi aplicación y crear instancias reactivas para trabajar con estos datos.
 
 ```typescript
-// Función para crear instancias reactivas del modelo
-const createUserModel = () =>
+import { state } from "../../lib/signals/State";
+import type { Infer } from "../../lib/ModelTypes";
+import { stateArray } from "../../lib/signals/stateArray";
+import { stateObject } from "../../lib/signals/stateObject";
+
+// La interfaz se infiere automáticamente del modelo
+export type iUser = Infer<typeof createUserModel>;
+export type UserModel = ReturnType<typeof createUserModel>;
+
+export const createUserModel = () =>
   stateObject({
+    id: state<string>(),
     name: state<string>(),
-    email: state<string>(),
+    email: stateArray(() => state<string>()), // Array de emails
     age: state<number>(),
+    countryId: state<string>(),
+    cityId: state<string>(),
   });
 ```
 
@@ -142,12 +153,16 @@ const createUserModel = () =>
 const user = createUserModel();
 
 user.set({
+  id: "123",
   name: "John Doe",
-  email: "john.doe@example.com",
+  email: ["john.doe@example.com", "john@work.com"],
   age: 30,
+  countryId: "ES",
+  cityId: "MAD",
 });
 
-user.name.get(); // John Doe
+user.name.get(); // "John Doe"
+user.email.get(); // ["john.doe@example.com", "john@work.com"]
 user.name.set(true); // ERROR (Type safe)
 ```
 
@@ -156,21 +171,42 @@ user.name.set(true); // ERROR (Type safe)
 - **¿Cuándo se utiliza?**: Cuando necesito interactuar con una fuente de datos externa, como una API REST, para obtener o enviar datos.
 
 ```typescript
-class UserApi {
-  public getUsers(): Promise<UserModel[]> {
-    return http.get("/users");
+import axios from "axios";
+import type { iUser } from "./UserModel";
+
+export class UserApi {
+  public async getUsers(): Promise<(iUser & { id: string })[]> {
+    return axios.get("/api/users");
   }
 
-  public async createUser(user: UserModel): Promise<void> {
-    await http.post("/users", user);
+  public async getUserById(userId: string): Promise<iUser & { id: string }> {
+    return axios.get(`/api/users/${userId}`);
   }
 
-  public async updateUser(user: UserModel): Promise<void> {
-    await http.put("/users", user);
+  public async searchUsers(query: string): Promise<(iUser & { id: string })[]> {
+    return axios.get("/api/users/search", { params: { q: query } });
   }
 
-  public async deleteUser(userId: string): Promise<void> {
-    await http.delete(`/users/${userId}`);
+  public async createUser(user: iUser): Promise<iUser & { id: string }> {
+    return axios.post("/api/users", user);
+  }
+
+  public async updateUser(
+    userId: string,
+    user: iUser
+  ): Promise<iUser & { id: string }> {
+    return axios.put(`/api/users/${userId}`, user);
+  }
+
+  public async patchUser(
+    userId: string,
+    user: Partial<iUser>
+  ): Promise<iUser & { id: string }> {
+    return axios.patch(`/api/users/${userId}`, user);
+  }
+
+  public async deleteUser(userId: string): Promise<iUser & { id: string }> {
+    return axios.delete(`/api/users/${userId}`);
   }
 }
 ```
@@ -180,16 +216,33 @@ class UserApi {
 - **¿Cuándo se utiliza?**: Cuando necesito asegurarme de que los datos en un modelo cumplen con ciertas reglas antes de procesarlos o enviarlos a una API.
 
 ```typescript
-const createUserValidator = (userModel) =>
-  calc(() => {
-    const { name, email, age } = userModel.get();
+import { calc } from "../../lib/signals/Calc";
+import type { UserModel } from "./UserModel";
 
-    return {
-      name: name.length > 0 && name.length <= 100,
-      email: email.length > 0 && email.length <= 100,
-      age: typeof age === "number" && age > 0,
-    };
+export function createUserValidator(user: UserModel) {
+  // Cada campo tiene su propio calc que retorna un mensaje de error o undefined
+  const name = calc(() => {
+    const value = user.name.get();
+    if (value?.length === 0) return "Name cannot be empty";
   });
+
+  const email = calc(() => {
+    const emails = user.email.get();
+    if (emails?.some((e) => !e.includes("@")))
+      return "All emails must be valid";
+  });
+
+  const age = calc(() => {
+    const value = user.age.get();
+    if (value <= 0) return "Age must be a positive number";
+  });
+
+  return {
+    name,
+    email,
+    age,
+  };
+}
 ```
 
 **ENTIDAD**: Encapsula el acceso a todo lo anterior y define acciones que se pueden realizar.
@@ -197,25 +250,33 @@ const createUserValidator = (userModel) =>
 - **¿Cuándo se utiliza?**: Cuando necesito una representación completa de un modelo de datos que incluya su estructura, validación y las operaciones que se pueden realizar sobre él.
 
 ```typescript
-class UserEntity {
-  private api = provide(UserApi); // API
-  public model = state<UserModel>(); // INTERFAZ + MODELO
-  public validator = createUserValidator(this.model); // VALIDADOR
+import { provide } from "../../lib/provider";
+import { UserApi } from "./UserApi";
+import { createUserModel, type iUser } from "./UserModel";
+import { createUserValidator } from "./UserValidator";
 
-  constructor(user: UserModel) {
+export class UserEntity {
+  private api = provide(UserApi);
+  public model = createUserModel(); // Crea una instancia reactiva del modelo
+  public validation = createUserValidator(this.model); // Validaciones reactivas
+
+  constructor(user: iUser) {
     this.model.set(user);
   }
 
   public async save() {
-    const data = this.model.get();
-    return data.id
-      ? await this.api.upsertUser(data)
-      : await this.api.createUser(data);
+    // Verifica que no haya errores de validación
+    const hasErrors = Object.values(this.validation).some((v) => !!v.get());
+    if (hasErrors) throw new Error("Invalid user data");
+
+    // Actualiza si existe id, crea si no
+    this.model.id.get()
+      ? await this.api.updateUser(this.model.id.get(), this.model.get())
+      : await this.api.createUser(this.model.get());
   }
 
   public async delete() {
-    const id = this.model.id.get();
-    await this.api.deleteUser(id);
+    await this.api.deleteUser(this.model.id.get());
   }
 }
 ```
