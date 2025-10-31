@@ -2,9 +2,9 @@ import axios from "axios";
 import type { City, Country } from "./MasterDataModel";
 
 export class MasterDataApi {
-  public getCities(country: string): Promise<City[]> {
+  public getCities(countryId: string): Promise<City[]> {
     return axios.get("/api/master-data/cities", {
-      params: { country },
+      params: { countryId },
     });
   }
 

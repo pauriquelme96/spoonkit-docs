@@ -12,24 +12,33 @@ let usersDb: (iUser & { id: string })[] = [
     name: "Juan Pérez",
     email: ["juan.perez@example.com"],
     age: 28,
+    countryId: null,
+    cityId: null,
   },
   {
     id: "2",
     name: "María García",
     email: ["maria.garcia@example.com"],
     age: 32,
+
+    countryId: null,
+    cityId: null,
   },
   {
     id: "3",
     name: "Carlos López",
     email: ["carlos.lopez@example.com"],
     age: 25,
+    countryId: null,
+    cityId: null,
   },
   {
     id: "4",
     name: "Ana Martínez",
     email: ["ana.martinez@example.com"],
     age: 29,
+    countryId: null,
+    cityId: null,
   },
 ];
 
@@ -202,24 +211,24 @@ mock.onGet("/api/master-data/countries").reply(() => {
 // GET /api/master-data/cities - Obtener lista de ciudades (con filtro opcional por país)
 mock.onGet("/api/master-data/cities").reply((config) => {
   console.log("Mocking /api/master-data/cities");
-  const country = config.params?.country;
+  const countryId = config.params?.countryId;
 
   const allCities = [
-    { id: "1", name: "Madrid", country: "España" },
-    { id: "2", name: "Barcelona", country: "España" },
-    { id: "3", name: "Valencia", country: "España" },
-    { id: "4", name: "Sevilla", country: "España" },
-    { id: "5", name: "Zaragoza", country: "España" },
-    { id: "6", name: "Buenos Aires", country: "Argentina" },
-    { id: "7", name: "Ciudad de México", country: "México" },
-    { id: "8", name: "Lima", country: "Perú" },
-    { id: "9", name: "Bogotá", country: "Colombia" },
-    { id: "10", name: "Santiago", country: "Chile" },
+    { id: "1", name: "Madrid", countryId: "1" },
+    { id: "2", name: "Barcelona", countryId: "1" },
+    { id: "3", name: "Valencia", countryId: "1" },
+    { id: "4", name: "Sevilla", countryId: "1" },
+    { id: "5", name: "Zaragoza", countryId: "1" },
+    { id: "6", name: "Buenos Aires", countryId: "2" },
+    { id: "7", name: "Ciudad de México", countryId: "3" },
+    { id: "8", name: "Lima", countryId: "4" },
+    { id: "9", name: "Bogotá", countryId: "5" },
+    { id: "10", name: "Santiago", countryId: "6" },
   ];
 
   // Filtrar por país si se proporciona el parámetro
-  const cities = country
-    ? allCities.filter((city) => city.country === country)
+  const cities = countryId
+    ? allCities.filter((city) => city.countryId === countryId)
     : allCities;
 
   return [200, cities];

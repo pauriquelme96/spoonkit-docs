@@ -1,7 +1,7 @@
 import { state } from "../../lib/signals/State";
-import { stateObject } from "../../lib/signals/StateObject";
 import type { Infer } from "../../lib/ModelTypes";
 import { stateArray } from "../../lib/signals/stateArray";
+import { stateObject } from "../../lib/signals/stateObject";
 
 // La interfaz ahora se infiere automáticamente del modelo
 export type iUser = Infer<typeof createUserModel>;
@@ -13,4 +13,6 @@ export const createUserModel = () =>
     name: state<string>(),
     email: stateArray(() => state<string>()),
     age: state<number>(),
+    countryId: state<string>(),
+    cityId: state<string>(),
   });

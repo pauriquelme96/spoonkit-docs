@@ -12,4 +12,5 @@ export class SelectCtrl<T, V> extends Ctrl {
   public disabled = state<boolean>(false);
   public error = state<string>("");
   public onChange = emitter<V>();
+  public loading = state<boolean>(false);
 }

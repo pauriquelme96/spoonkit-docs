@@ -2,6 +2,7 @@ import { useCtrl } from "../../../lib/useCtrl";
 import { UserDetailCtrl } from "./UserDetailCtrl";
 import { Input } from "../../../components/Input/Input";
 import { Button } from "../../../components/Button/Button";
+import { Select } from "../../../components/Select/Select";
 
 interface UserDetailProps {
   ctrl: UserDetailCtrl;
@@ -39,6 +40,14 @@ export function UserDetail({ ctrl }: UserDetailProps) {
 
         <div style={{ marginTop: "20px" }}>
           <Button ctrl={self.saveButton} />
+        </div>
+
+        <div style={{ marginBottom: "15px" }}>
+          <Select ctrl={self.countrySelect} />
+        </div>
+
+        <div style={{ marginBottom: "15px" }}>
+          <Select ctrl={self.citySelect} />
         </div>
       </div>
     </div>

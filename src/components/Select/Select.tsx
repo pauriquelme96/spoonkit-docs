@@ -20,7 +20,7 @@ export function Select({ ctrl }: { ctrl: SelectCtrl<any, any> }) {
       <select
         className={`select ${self.error.get() ? "select-error" : ""}`}
         value={getCurrentIndex()}
-        disabled={self.disabled.get()}
+        disabled={self.loading.get() || self.disabled.get()}
         onChange={(e) => {
           const index = parseInt(e.target.value, 10);
           const selectedOption = self.options.get()[index];
@@ -32,7 +32,7 @@ export function Select({ ctrl }: { ctrl: SelectCtrl<any, any> }) {
         }}
       >
         <option value="" disabled>
-          {self.placeholder.get()}
+          {self.loading.get() ? "Loading..." : self.placeholder.get()}
         </option>
         {self.options.get()?.map((option, index) => {
           const labelKey = self.labelKey.get();
