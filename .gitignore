@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# TypeDoc documentation output
+docs-output
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

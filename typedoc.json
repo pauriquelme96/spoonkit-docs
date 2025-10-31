@@ -1,0 +1,23 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "./src/lib/signals"
+  ],
+  "entryPointStrategy": "expand",
+  "out": "docs-output",
+  "exclude": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**",
+    "**/__typecheck/**",
+    "**/node_modules/**",
+    "**/mock-api.ts"
+  ],
+  "excludePrivate": true,
+  "excludeProtected": false,
+  "includeVersion": true,
+  "name": "Spoonkit Signals",
+  "readme": "./README.md",
+  "tsconfig": "./tsconfig.typedoc.json",
+  "plugin": []
+}
