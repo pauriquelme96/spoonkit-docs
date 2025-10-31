@@ -35,6 +35,7 @@ Spoon utiliza un sistema de **signals reactivos** para gestionar el estado de fo
 Para más información sobre la arquitectura, consulta:
 - [Arquitectura Spoon](./docs/ARQUITECTURA_SPOON.md) - Guía completa
 - [Signals Cheatsheet](./docs/SIGNALS_CHEATSHEET.md) - Referencia rápida de signals
+- [Copilot Instructions](./.github/copilot-instructions.md) - Guía de desarrollo con GitHub Copilot
 
 #### 📖 Documentación API (TypeDoc)
 
