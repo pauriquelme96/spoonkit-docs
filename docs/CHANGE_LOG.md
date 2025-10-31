@@ -11,7 +11,7 @@ Las siguientes características están **deprecated** y no deben utilizarse en n
 #### EntityStores
 - **Estado**: Deprecated
 - **Razón**: Abstracción innecesaria que complica el desarrollo
-- **Alternativa**: Utilizar implementación según necesidad
+- **Alternativa**: Utilizar implementación según necesidad 
 
 #### Field Classes
 - **Clases deprecated**: `Field`, `FieldModel`, `FieldObj`, `FieldArray`
