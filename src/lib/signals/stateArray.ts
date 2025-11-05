@@ -129,8 +129,15 @@ export function stateArray<T extends StateLike>(
  * ]);
  *
  * // Crear un array reactivo solo con los nombres
- * const nombres = usuarios.map((user) => calc(() => user.name));
+ * const nombres = usuarios.map({
+ *   newModel: () => state<string>(),
+ *   mapFn: (user) => user.name
+ * });
  * console.log(nombres.get()); // ["Ana", "Luis", "María"]
+ *
+ * // Agregar un nombre nuevo (sin transformación)
+ * nombres.push("Carlos");
+ * console.log(nombres.get()); // ["Ana", "Luis", "María", "Carlos"]
  *
  * // Filtrar mayores de edad (retorna un nuevo StateArray)
  * const mayores = usuarios.filter((user) => user.edad >= 18);
@@ -142,10 +149,6 @@ export function stateArray<T extends StateLike>(
  *   0
  * );
  * console.log(sumaEdades.get()); // 72
- *
- * // Unir nombres en un string (reactivo)
- * const nombresUnidos = usuarios.map((u) => calc(() => u.name)).join(", ");
- * console.log(nombresUnidos.get()); // "Ana, Luis, María"
  *
  * // Limpiar el array
  * usuarios.clear();
@@ -266,33 +269,57 @@ export class StateArray<T extends StateLike> extends State<any> {
    * Crea un nuevo StateArray aplicando una función de transformación a cada elemento.
    *
    * Similar al `map()` de arrays normales, pero mantiene la reactividad. El nuevo
-   * StateArray contiene signals transformados que se actualizan automáticamente.
+   * StateArray contiene signals transformados.
+   *
+   * La clave de este método es separar la **estructura del signal** (newModel) de la
+   * **transformación de valores** (mapFn). Esto permite que operaciones como push() y set()
+   * en el array mapeado NO apliquen la transformación, manteniendo un comportamiento semántico correcto.
    *
    * @template U - El tipo de signal resultante de la transformación
-   * @param mapFn - Función que transforma cada valor en un nuevo signal
+   * @param config - Configuración del map
+   * @param config.newModel - Función que crea la estructura del signal (sin valores).
+   *                          Debe retornar un signal vacío del tipo deseado (State, StateObject, StateArray).
+   * @param config.mapFn - Función que transforma valores (no signals) del array original.
+   *                       Recibe valores primitivos y debe retornar valores primitivos del tipo esperado por newModel.
    * @returns Un nuevo StateArray con los elementos transformados
-   * @throws {TypeError} Si mapFn no es una función
+   * @throws {TypeError} Si newModel o mapFn no son funciones
    */
-  public map<U extends StateLike>(
+  public map<U extends StateLike>(config: {
+    newModel: () => U;
     mapFn: (
       value: ExtractValue<T>,
       index: number,
       array: ExtractValue<T>[]
-    ) => U
-  ) {
+    ) => ExtractValue<U>;
+  }): StateArray<U> {
+    const { newModel, mapFn } = config;
+
+    if (typeof newModel !== "function") {
+      throw new TypeError(
+        `stateArray.map() expects newModel to be a function, but received ${typeof newModel}`
+      );
+    }
+
     if (typeof mapFn !== "function") {
       throw new TypeError(
-        `stateArray.map() expects a function, but received ${typeof mapFn}`
+        `stateArray.map() expects mapFn to be a function, but received ${typeof mapFn}`
       );
     }
 
     const currentValues = this.get();
 
-    const mappedStateArray = new StateArray(mapFn as any);
+    // Crear signals iniciales: aplicar mapFn a cada valor y crear signal con newModel
+    const mappedSignals = currentValues.map((value, index, array) => {
+      const transformedValue = mapFn(value, index, array);
+      const signal = newModel();
+      signal.set(transformedValue as any);
+      return signal;
+    });
 
-    mappedStateArray.set(currentValues);
+    // La factory para push/set es simplemente newModel (sin transformación)
+    const factory = () => newModel();
 
-    return mappedStateArray as StateArray<U>;
+    return new StateArray(factory as any, mappedSignals) as StateArray<U>;
   }
 
   /**

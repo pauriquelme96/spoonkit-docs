@@ -289,8 +289,8 @@ const b = state(10);
 
 // Este calc SOLO se suscribe a 'a', no a 'b'
 const resultado = calc(() => {
-  const valorA = a.get();   // ✅ Reactivo: se suscribe
-  const valorB = b.peek();  // ❌ No reactivo: solo lee
+  const valorA = a.get(); // ✅ Reactivo: se suscribe
+  const valorB = b.peek(); // ❌ No reactivo: solo lee
   return valorA * valorB;
 });
 
@@ -470,9 +470,16 @@ const todosMayoresACero = numeros.every((valor) => valor > 0);
 console.log(todosMayoresACero.get()); // true
 
 // MAP: Transformar cada elemento (devuelve StateArray)
-// La función recibe el VALOR y debe devolver un signal
-const dobles = numeros.map((valor) => state(valor * 2));
+// Separamos la estructura del signal (newModel) de la transformación (mapFn)
+const dobles = numeros.map({
+  newModel: () => state<number>(),
+  mapFn: (valor) => valor * 2,
+});
 console.log(dobles.get()); // [200, 40, 60, 80]
+
+// push() y set() en el array mapeado NO aplican la transformación
+dobles.push(50);
+console.log(dobles.get()); // [200, 40, 60, 80, 50] (no 100)
 
 // FILTER: Filtrar elementos (devuelve StateArray)
 const mayoresDe30 = numeros.filter((valor) => valor > 30);
@@ -483,7 +490,7 @@ const suma = numeros.reduce((total, valor) => total + valor, 0);
 console.log(suma.get()); // 190 (100 + 20 + 30 + 40)
 
 // JOIN: Unir en un string (devuelve Calc<string>)
-const texto = numeros.map((n) => state(n.toString())).join(", ");
+const texto = numeros.join(", ");
 console.log(texto.get()); // "100, 20, 30, 40"
 
 // OBTENER ARRAY DE SIGNALS (para uso avanzado)
@@ -495,7 +502,7 @@ console.log(signals[0].get()); // 100
 **Ejemplo con objetos:**
 
 ```typescript
-const usuarios = stateArray(() => 
+const usuarios = stateArray(() =>
   stateObject({
     nombre: state(""),
     edad: state(0),
@@ -518,25 +525,38 @@ primerUsuario?.edad.set(26);
 
 // Filtrar usuarios mayores de 25 (filter recibe el valor)
 const mayores = usuarios.filter((usuario) => usuario.edad > 25);
-console.log(mayores.get()); 
+console.log(mayores.get());
 // [{ nombre: "Ana María", edad: 26 }, { nombre: "Luis", edad: 30 }]
 
-// Map: transformar a un array de nombres (map recibe el valor, devuelve signal)
-const nombres = usuarios.map((usuario) => state(usuario.nombre));
+// Map: transformar a un array de nombres
+const nombres = usuarios.map({
+  newModel: () => state<string>(),
+  mapFn: (usuario) => usuario.nombre,
+});
 console.log(nombres.get()); // ["Ana María", "Luis", "María"]
+
+// Agregar un nombre directamente (sin transformación)
+nombres.push("Carlos");
+console.log(nombres.get()); // ["Ana María", "Luis", "María", "Carlos"]
 
 // Buscar un usuario (find recibe el valor, devuelve signal)
 const encontrado = usuarios.find((usuario) => usuario.edad > 25);
 console.log(encontrado?.get()); // { nombre: "Ana María", edad: 26 }
 
 // Transformar añadiendo más propiedades con stateObject
-const usuariosConEstado = usuarios.map((usuario) =>
-  stateObject({
-    nombre: state(usuario.nombre),
-    edad: state(usuario.edad),
-    activo: state(true),
-  })
-);
+const usuariosConEstado = usuarios.map({
+  newModel: () =>
+    stateObject({
+      nombre: state<string>(),
+      edad: state<number>(),
+      activo: state<boolean>(),
+    }),
+  mapFn: (usuario) => ({
+    nombre: usuario.nombre,
+    edad: usuario.edad,
+    activo: true,
+  }),
+});
 ```
 
 **⚡ Reutilización eficiente de signals:**
@@ -558,22 +578,38 @@ items.set([10, 20, 30, 40, 50]);
 ```
 
 **⚠️ Importante sobre `map()`:**
-La función de transformación que pasas a `map()` recibe el **valor** (no el signal) y **debe devolver un signal** (`state()`, `stateObject()`, o `stateArray()`). Esto mantiene la reactividad en el array transformado.
+
+El método `map()` recibe un objeto de configuración con dos propiedades:
+
+- `newModel`: Función que crea la **estructura del signal** (sin valores). Define QUÉ tipo de signal crear.
+- `mapFn`: Función que **transforma valores** (no signals). Define CÓMO transformar los datos.
+
+Esta separación garantiza que operaciones como `push()` y `set()` en el array mapeado **NO** apliquen la transformación.
 
 ```typescript
-// ✅ CORRECTO: map recibe el valor, devuelve state
+// ✅ CORRECTO: Separar estructura de transformación
+const dobles = numeros.map({
+  newModel: () => state<number>(), // Estructura del signal
+  mapFn: (valor) => valor * 2, // Transformación del valor
+});
+
+dobles.set([10, 20]); // [10, 20] (sin transformar) ✅
+
+// ✅ CORRECTO: map puede transformar a stateObject
+const conMetadata = usuarios.map({
+  newModel: () =>
+    stateObject({
+      datos: state<User>(),
+      activo: state<boolean>(),
+    }),
+  mapFn: (usuario) => ({
+    datos: usuario,
+    activo: true,
+  }),
+});
+
+// ❌ INCORRECTO: Sintaxis antigua (ya no soportada)
 const dobles = numeros.map((valor) => state(valor * 2));
-
-// ✅ CORRECTO: map puede devolver stateObject
-const conMetadata = usuarios.map((usuario) =>
-  stateObject({
-    datos: state(usuario),
-    activo: state(true),
-  })
-);
-
-// ❌ INCORRECTO: devuelve valor plano (no es reactivo)
-const dobles = numeros.map((valor) => valor * 2);
 ```
 
 **💡 Ventajas:**
@@ -639,21 +675,21 @@ console.log(displayPrice.get()); // 160 (se actualizó solo!)
 **⚠️ Advertencias importantes:**
 
 1. **Nueva vinculación reemplaza la anterior**: Si vuelves a vincular un state con `set(otroSignal)`, la vinculación anterior se limpia automáticamente.
-   
+
    ```typescript
    const a = state(1);
    const b = state(2);
    const c = state(a); // c vinculado a a
-   
+
    c.set(b); // Ahora c está vinculado a b, la vinculación con a se eliminó
    ```
 
 2. **Valor directo NO rompe la vinculación**: Si haces `set()` con un valor directo después de vincular, el valor se actualiza pero los monitors de vinculación siguen activos (pueden generar comportamiento inesperado).
-   
+
    ```typescript
    const a = state(10);
    const b = state(a); // Vinculados
-   
+
    b.set(20); // Cambia el valor, pero los monitors siguen activos
    // Si cambias 'a' después, 'b' volverá a sincronizarse con 'a'
    ```
