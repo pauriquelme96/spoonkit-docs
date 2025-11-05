@@ -69,28 +69,53 @@ export function stateArray<T extends StateLike>(
  * primerNumero?.set(10);
  * console.log(numeros.get()); // [10, 2, 3]
  *
- * // Agregar y quitar elementos
- * numeros.push(4);
+ * // Agregar elementos y obtener referencia al signal creado
+ * const nuevoSignal = numeros.push(4);
  * console.log(numeros.get()); // [10, 2, 3, 4]
  *
+ * // Modificar el elemento agregado usando el signal retornado
+ * nuevoSignal.set(40);
+ * console.log(numeros.get()); // [10, 2, 3, 40]
+ *
+ * // Quitar el último elemento
  * const ultimo = numeros.pop();
- * console.log(ultimo); // 4
+ * console.log(ultimo); // 40
  * console.log(numeros.get()); // [10, 2, 3]
+ *
+ * // Eliminar elemento en posición específica
+ * numeros.removeAt(1);
+ * console.log(numeros.get()); // [10, 3]
  *
  * // Longitud reactiva
  * const longitud = numeros.length();
- * console.log(longitud.get()); // 3
+ * console.log(longitud.get()); // 2
  *
  * // Buscar elemento
  * const encontrado = numeros.find((num) => num > 5);
  * console.log(encontrado?.get()); // 10
+ * ```
  *
- * // Verificaciones reactivas
- * const tieneGrandes = numeros.some((num) => num > 5);
+ * @example
+ * ```typescript
+ * // Ejemplo: Verificaciones reactivas con some y every
+ * const numeros = stateArray(() => state<number>());
+ * numeros.set([1, 2, 3, 4, 5]);
+ *
+ * // Verificación reactiva: ¿hay algún número mayor a 10?
+ * const tieneGrandes = numeros.some((num) => num > 10);
+ * console.log(tieneGrandes.get()); // false
+ *
+ * // Al modificar un elemento, la verificación se actualiza automáticamente
+ * numeros.at(2)?.set(15);
  * console.log(tieneGrandes.get()); // true
  *
+ * // Verificación reactiva: ¿todos son positivos?
  * const todosMayoresACero = numeros.every((num) => num > 0);
  * console.log(todosMayoresACero.get()); // true
+ *
+ * // Al agregar un negativo, se actualiza automáticamente
+ * numeros.push(-5);
+ * console.log(todosMayoresACero.get()); // false
  * ```
  *
  * @example
@@ -297,19 +322,24 @@ export class StateArray<T extends StateLike> extends State<any> {
   }
 
   /**
-   * Agrega un nuevo elemento al final del array.
+   * Agrega un nuevo elemento al final del array y retorna el signal creado.
    *
-   * Crea un nuevo signal usando la función factory y lo añade al array.
+   * Crea un nuevo signal usando la función factory, lo inicializa con el valor
+   * proporcionado y lo añade al final del array. Retorna el signal creado para
+   * que puedas mantener una referencia y modificarlo posteriormente.
    *
    * @param value - Valor a agregar al final del array
+   * @returns El signal creado que contiene el nuevo elemento
    */
-  public push(value: ExtractValue<T>) {
+  public push(value: ExtractValue<T>): T {
     const existingSignals = this.signals.peek();
     const newSignal = this.fn(value, existingSignals.length, [
       ...existingSignals.map((s) => s.peek()),
       value,
     ] as any);
+    newSignal.set(value as any);
     this.signals.set([...existingSignals, newSignal]);
+    return newSignal;
   }
 
   /**
@@ -341,13 +371,14 @@ export class StateArray<T extends StateLike> extends State<any> {
   }
 
   /**
-   * Verifica si al menos un elemento cumple una condición.
+   * Verifica de forma reactiva si al menos un elemento cumple una condición.
    *
-   * Retorna un Calc que se actualiza automáticamente cuando cambia el array
-   * o cualquiera de sus elementos.
+   * Similar al `some()` de arrays normales, pero retorna un Calc que se
+   * recalcula automáticamente cuando cambia el array o cualquiera de sus elementos.
+   * Esto permite crear validaciones y lógica condicional que se actualiza en tiempo real.
    *
    * @param fn - Función que determina si un elemento cumple la condición
-   * @returns Calc que devuelve true si al menos un elemento cumple la condición
+   * @returns Calc reactivo que devuelve true si al menos un elemento cumple la condición
    */
   public some(
     fn: (item: ExtractValue<T>, index: number) => boolean
@@ -355,18 +386,19 @@ export class StateArray<T extends StateLike> extends State<any> {
     return calc(() =>
       this.signals
         .get()
-        .some((signal, index) => fn(signal.peek() as ExtractValue<T>, index))
+        .some((signal, index) => fn(signal.get() as ExtractValue<T>, index))
     );
   }
 
   /**
-   * Verifica si todos los elementos cumplen una condición.
+   * Verifica de forma reactiva si todos los elementos cumplen una condición.
    *
-   * Retorna un Calc que se actualiza automáticamente cuando cambia el array
-   * o cualquiera de sus elementos.
+   * Similar al `every()` de arrays normales, pero retorna un Calc que se
+   * recalcula automáticamente cuando cambia el array o cualquiera de sus elementos.
+   * Útil para validaciones que deben cumplirse en todos los elementos del array.
    *
    * @param fn - Función que determina si un elemento cumple la condición
-   * @returns Calc que devuelve true si todos los elementos cumplen la condición
+   * @returns Calc reactivo que devuelve true si todos los elementos cumplen la condición
    */
   public every(
     fn: (item: ExtractValue<T>, index: number) => boolean
@@ -374,7 +406,7 @@ export class StateArray<T extends StateLike> extends State<any> {
     return calc(() =>
       this.signals
         .get()
-        .every((signal, index) => fn(signal.peek() as ExtractValue<T>, index))
+        .every((signal, index) => fn(signal.get() as ExtractValue<T>, index))
     );
   }
 
@@ -407,6 +439,22 @@ export class StateArray<T extends StateLike> extends State<any> {
   public at(index: number): T | undefined {
     const signals = this.signals.get();
     return signals.at(index);
+  }
+
+  /**
+   * Elimina el elemento en una posición específica del array.
+   *
+   * Remueve el signal en el índice especificado y actualiza el array.
+   * Si el índice está fuera de rango, no hace nada.
+   *
+   * @param index - Índice del elemento a eliminar (debe ser >= 0 y < longitud del array)
+   */
+  public removeAt(index: number): void {
+    const existingSignals = this.signals.peek();
+    if (index < 0 || index >= existingSignals.length) return;
+
+    const newSignals = existingSignals.filter((_, i) => i !== index);
+    this.signals.set(newSignals);
   }
 
   /**
