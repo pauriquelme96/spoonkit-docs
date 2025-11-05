@@ -10,7 +10,6 @@ axios.interceptors.response.use(
 
 function App() {
   return <UserPanel />;
-  //return <div>Hello World!</div>;
 }
 
 export default App;

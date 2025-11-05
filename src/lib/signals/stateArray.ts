@@ -1,3 +1,4 @@
+import { $batch } from "./$batch";
 import { Calc, calc } from "./Calc";
 import { State, state } from "./State";
 import type { StateLike } from "./StateLike";
@@ -223,11 +224,13 @@ export class StateArray<T extends StateLike> extends State<any> {
     const existingSignals = this.signals.peek();
     const newSignals: T[] = [];
 
-    newValues.forEach((value, i) => {
-      const signal =
-        existingSignals[i] || this.fn(value as any, i, newValues as any[]);
-      signal.set(value as any);
-      newSignals.push(signal);
+    $batch(() => {
+      newValues.forEach((value, i) => {
+        const signal =
+          existingSignals[i] || this.fn(value as any, i, newValues as any[]);
+        signal.set(value as any);
+        newSignals.push(signal);
+      });
     });
 
     this.signals.set(newSignals);

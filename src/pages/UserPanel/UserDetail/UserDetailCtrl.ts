@@ -53,7 +53,7 @@ export class UserDetailCtrl extends Ctrl {
   public countrySelect = new SelectCtrl<Country, string>().set({
     label: "Country",
     placeholder: "Select country",
-    labelKey: 'name',
+    labelKey: "name",
     valueKey: "id",
     disabled: this.saving,
     options: asyncCalc(() => this.masterData.getCountries()),
@@ -63,7 +63,7 @@ export class UserDetailCtrl extends Ctrl {
   public citySelect = new SelectCtrl<Country, string>().set((_select) => ({
     label: "City",
     placeholder: "Select city",
-    labelKey: 'name',
+    labelKey: "name",
     valueKey: "id",
     disabled: this.saving,
     value: this.user.model.cityId,

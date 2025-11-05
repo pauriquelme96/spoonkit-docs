@@ -1,3 +1,4 @@
+import { $batch } from "./$batch";
 import { calc } from "./Calc";
 import { State } from "./State";
 import type { StateLike } from "./StateLike";
@@ -213,11 +214,13 @@ export class StateObjectClass<
       );
     }
 
-    for (const key in this.model) {
-      if (newValue.hasOwnProperty(key)) {
-        this.model[key].set(newValue[key]);
+    $batch(() => {
+      for (const key in this.model) {
+        if (newValue.hasOwnProperty(key)) {
+          this.model[key].set(newValue[key]);
+        }
       }
-    }
+    });
 
     return this;
   }

@@ -12,6 +12,7 @@ export class InputCtrl<T> extends Ctrl {
   public type = state<string>("text");
   public disabled = state<boolean>(false);
   public error = state<string>("");
+  public isTouched = state<boolean>(false);
 
   public onChange = emitter<string>();
 }

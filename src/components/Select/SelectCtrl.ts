@@ -1,8 +1,11 @@
 import { Ctrl } from "../../lib/Ctrl";
 import { emitter } from "../../lib/signals/Emitter";
 import { state } from "../../lib/signals/State";
+import { Select } from "./Select";
 
 export class SelectCtrl<T, V> extends Ctrl {
+  component? = Select;
+
   public label = state<string>("");
   public value = state<V>();
   public options = state<T[]>([]);
