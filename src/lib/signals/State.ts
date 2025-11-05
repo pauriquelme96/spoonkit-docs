@@ -1,6 +1,7 @@
 import { signal } from "@preact/signals-core";
 import { Calc } from "./Calc";
 import { monitor } from "./Monitor";
+import { isPlainObject } from "../isPlainObject";
 
 /**
  * Crea un nuevo State con un valor inicial opcional.
@@ -119,7 +120,13 @@ export class State<T = unknown> {
    * @returns El valor actual almacenado en el State
    */
   public get(): T {
-    return this.self.value;
+    if (this.self.value instanceof Array) {
+      return [...this.self.value] as T;
+    } else if (isPlainObject(this.self.value)) {
+      return { ...this.self.value } as T;
+    } else {
+      return this.self.value;
+    }
   }
 
   /**
