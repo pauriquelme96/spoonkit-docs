@@ -307,7 +307,7 @@ Todos los controladores heredan de la clase `Ctrl`, que proporciona:
 ```typescript
 class UserFormCtrl extends Ctrl {
   nameInput = new InputCtrl();
-  
+
   constructor() {
     super();
     // Vincula el valor del input con el modelo
@@ -334,7 +334,7 @@ class MiCtrl extends Ctrl {
     // Se ejecuta cuando el controlador se monta en la UI
     console.log("Controlador iniciado");
   }
-  
+
   ctrlDestroy() {
     // Se ejecuta cuando el controlador se desmonta
     console.log("Limpiando recursos");
@@ -352,13 +352,13 @@ Son controladores genéricos que funcionan en cualquier contexto. Ejemplos: `Inp
 // Controlador genérico de input
 class InputCtrl<T> extends Ctrl {
   component = Input; // Componente visual asociado (opcional)
-  
+
   public label = state<string>("");
   public value = state<T>();
   public placeholder = state<string>("");
   public disabled = state<boolean>(false);
   public error = state<string>("");
-  
+
   public onChange = emitter<string>();
 }
 ```
@@ -371,6 +371,9 @@ const emailInput = new InputCtrl<string>().set({
   label: "Email",
   placeholder: "tu@email.com",
   type: "email",
+  onChange: (value) => {
+    console.log(value);
+  },
 });
 ```
 
@@ -382,7 +385,7 @@ Son controladores ligados a una funcionalidad concreta de tu aplicación. Suelen
 class UserDetailCtrl extends Ctrl {
   private saving = state<boolean>(false);
   public onClose = emitter<void>();
-  
+
   // Compone controladores reutilizables
   public nameInput = new InputCtrl<string>().set({
     label: "Nombre",
@@ -390,12 +393,12 @@ class UserDetailCtrl extends Ctrl {
     error: this.user.validation.name, // Vinculado a validación
     disabled: this.saving, // Deshabilitado mientras guarda
   });
-  
+
   public saveButton = new ButtonCtrl().set({
     label: "Guardar",
     loading: this.saving,
-    disabled: calc(() => 
-      Object.values(this.user.validation).some(v => !!v.get())
+    disabled: calc(() =>
+      Object.values(this.user.validation).some((v) => !!v.get())
     ),
     onClick: async () => {
       this.saving.set(true);
@@ -404,7 +407,7 @@ class UserDetailCtrl extends Ctrl {
       this.onClose.next();
     },
   });
-  
+
   constructor(private user: UserEntity) {
     super();
   }
@@ -417,21 +420,21 @@ class UserDetailCtrl extends Ctrl {
 class UserPanelCtrl extends Ctrl {
   // State que puede contener un controlador
   userDetailCtrl = state<UserDetailCtrl>(null);
-  
+
   // Título dinámico basado en el estado de la tabla
-  title = calc(() => 
-    this.userTable.loading.get() 
-      ? "Cargando usuarios..." 
+  title = calc(() =>
+    this.userTable.loading.get()
+      ? "Cargando usuarios..."
       : "Gestión de Usuarios"
   );
-  
+
   // Tabla de usuarios con evento de apertura de detalle
   userTable = new UserTableCtrl().set({
     onOpenDetail: (user: UserEntity) => {
       const detail = new UserDetailCtrl(user).set({
         onClose: () => this.userDetailCtrl.set(null),
       });
-      
+
       this.userDetailCtrl.set(detail);
     },
   });
@@ -456,7 +459,7 @@ class ParentCtrl extends Ctrl {
 
 class ChildCtrl extends Ctrl {
   onSave = emitter<any>();
-  
+
   save() {
     this.onSave.next(data); // Emite el evento
   }
@@ -477,7 +480,7 @@ register(MasterDataApi, new MasterDataApi());
 // Cualquier controlador puede acceder a estos servicios
 class UserDetailCtrl extends Ctrl {
   private userApi = provide(UserApi); // Obtiene la instancia registrada
-  
+
   async save() {
     await this.userApi.updateUser(this.user);
   }
@@ -485,7 +488,7 @@ class UserDetailCtrl extends Ctrl {
 
 class UserTableCtrl extends Ctrl {
   private userApi = provide(UserApi); // Misma instancia que UserDetailCtrl
-  
+
   async loadUsers() {
     const users = await this.userApi.getUsers();
   }
@@ -505,17 +508,17 @@ class UserListContext {
 
 class UserPanelCtrl extends Ctrl {
   private context = new UserListContext();
-  
+
   ctrlStart() {
     // Registra el contexto cuando el controlador se monta
     register(UserListContextToken, this.context);
   }
-  
+
   ctrlDestroy() {
     // IMPORTANTE: Limpia el contexto cuando se desmonta
     unregister(UserListContextToken);
   }
-  
+
   // Controladores hijos
   userTable = new UserTableCtrl();
   userDetail = new UserDetailCtrl();
@@ -524,7 +527,7 @@ class UserPanelCtrl extends Ctrl {
 // Los controladores hijos acceden al contexto del padre
 class UserTableCtrl extends Ctrl {
   private context = provide(UserListContextToken);
-  
+
   selectUser(user: User) {
     this.context.selectedUser.set(user); // Actualiza el contexto compartido
   }
@@ -532,7 +535,7 @@ class UserTableCtrl extends Ctrl {
 
 class UserDetailCtrl extends Ctrl {
   private context = provide(UserListContextToken);
-  
+
   // Reacciona a cambios en el contexto
   selectedUserName = calc(() => {
     const user = this.context.selectedUser.get();
@@ -542,6 +545,7 @@ class UserDetailCtrl extends Ctrl {
 ```
 
 La diferencia clave:
+
 - **Global**: Se registra al inicio y nunca se desregistra
 - **Local**: Se registra en `ctrlStart()` y se debe limpiar en `ctrlDestroy()` para evitar fugas de memoria
 
@@ -574,13 +578,13 @@ const nameInput = new InputCtrl().set({
 // Cuando userModel.name cambia por código, el input se actualiza
 ```
 
-**3. Calc** - Valores derivados que se actualizan automáticamente pero son de solo lectura:
+**3. Calc** - Valores derivados que se actualizan automáticamente:
 
 ```typescript
 const saving = state(false);
 
 const saveButton = new ButtonCtrl().set({
-  label: calc(() => saving.get() ? "Guardando..." : "Guardar"),
+  label: calc(() => (saving.get() ? "Guardando..." : "Guardar")),
   disabled: saving, // También puede ser un State directamente
 });
 
@@ -588,8 +592,9 @@ saving.set(true); // El label del botón cambia automáticamente
 ```
 
 El método `set()` detecta automáticamente el tipo de prop:
+
 - Si es un `State`, vincula el valor bidireccionalmente
-- Si es un `Calc`, se suscribe a sus cambios (solo lectura)
+- Si es un `Calc`, se suscribe a sus cambios
 - Si es un `Emitter`, suscribe el callback al evento
 - Si es un valor normal, simplemente lo asigna
 
@@ -617,7 +622,7 @@ El hook `useCtrl` es el puente entre los controladores y los componentes React. 
 ```typescript
 function MyComponent({ ctrl }: { ctrl: MyCtrl }) {
   const { self } = useCtrl(ctrl);
-  
+
   // self: La instancia del controlador (equivalente a ctrl)
 }
 ```
@@ -642,10 +647,10 @@ class UserFormCtrl extends Ctrl {
 // El componente padre pasa la instancia al hijo
 function UserForm() {
   const { self } = useCtrl(UserFormCtrl);
-  
+
   return (
     <div>
-      <Input ctrl={self.nameInput} />  {/* Pasa la instancia creada */}
+      <Input ctrl={self.nameInput} /> {/* Pasa la instancia creada */}
     </div>
   );
 }
@@ -653,7 +658,7 @@ function UserForm() {
 // El componente hijo recibe y usa la instancia
 function Input({ ctrl }: { ctrl: InputCtrl<any> }) {
   const { self } = useCtrl(ctrl);
-  
+
   return (
     <div className="input-wrapper">
       {self.label.get() && <label>{self.label.get()}</label>}
@@ -667,9 +672,7 @@ function Input({ ctrl }: { ctrl: InputCtrl<any> }) {
           self.onChange.next(e.target.value);
         }}
       />
-      {self.error.get() && (
-        <span className="error">{self.error.get()}</span>
-      )}
+      {self.error.get() && <span className="error">{self.error.get()}</span>}
     </div>
   );
 }
@@ -684,7 +687,7 @@ function UserPanel() {
   // useCtrl crea la instancia automáticamente
   const { self } = useCtrl(UserPanelCtrl);
   const userDetail = self.userDetailCtrl.get();
-  
+
   return (
     <div>
       {!userDetail && (
@@ -714,7 +717,7 @@ function Counter() {
     initialValue: 10,
     maxValue: 100,
   });
-  
+
   return (
     <div>
       <span>{self.count.get()}</span>
@@ -731,7 +734,7 @@ Cuando los signals de un controlador se actualizan, el componente se re-renderiz
 ```typescript
 function UserDetail({ ctrl }: { ctrl: UserDetailCtrl }) {
   const { self } = useCtrl(ctrl);
-  
+
   // Cuando nameInput.value cambia, el componente Input se re-renderiza
   // Cuando ageInput.value cambia, el componente Input se re-renderiza
   return (
@@ -752,12 +755,16 @@ El hook `useCtrl` gestiona automáticamente el ciclo de vida del controlador, ej
 ```typescript
 function MiComponente() {
   const { self } = useCtrl(MiCtrl);
-  
-  // ctrlStart() se ejecuta aquí (componente montado)
-  
+
+  useEffect(() => {
+    // ctrlStart() se ejecuta aquí (componente montado)
+
+    return () => {
+      // ctrlDestroy() se ejecuta aquí (componente desmontado)
+    };
+  }, []);
+
   return <div>...</div>;
-  
-  // ctrlDestroy() se ejecuta cuando el componente se desmonta
 }
 ```
 
@@ -768,17 +775,17 @@ function MiComponente() {
 ```typescript
 function App() {
   const navigate = useNavigate(); // Hook de react-router
-  
+
   // Registra navigate para que los controladores puedan usarlo
   useRegister(NavigationToken, navigate);
-  
+
   return <Router>...</Router>;
 }
 
 // En cualquier controlador
 class MyCtrl extends Ctrl {
   private navigate = provide(NavigationToken);
-  
+
   goToHome() {
     this.navigate("/home");
   }
@@ -792,19 +799,20 @@ Un aspecto importante de entender es que el componente puede re-renderizarse mú
 ```typescript
 function UserForm() {
   const { self } = useCtrl(UserFormCtrl);
-  
+
   // Cada vez que el componente se re-renderiza:
   // - Se ejecuta esta función de nuevo
   // - Pero 'self' sigue siendo la misma instancia
   // - El estado del controlador se mantiene intacto
-  
+
   console.log(self.key); // Siempre imprime el mismo key
-  
+
   return <div>...</div>;
 }
 ```
 
 Esto permite que:
+
 - El estado persista entre re-renders
 - Las suscripciones y listeners se mantengan
 - La lógica de negocio no se reinicie innecesariamente
@@ -816,20 +824,20 @@ Esto permite que:
 class UserFormCtrl extends Ctrl {
   private user = new UserEntity();
   private saving = state(false);
-  
+
   nameInput = new InputCtrl<string>().set({
     label: "Nombre",
     value: this.user.model.name,
     error: this.user.validation.name,
   });
-  
+
   emailInput = new InputCtrl<string>().set({
     label: "Email",
     value: this.user.model.email,
     error: this.user.validation.email,
     type: "email",
   });
-  
+
   saveButton = new ButtonCtrl().set({
     label: "Guardar",
     loading: this.saving,
@@ -844,7 +852,7 @@ class UserFormCtrl extends Ctrl {
 // Componente
 function UserForm() {
   const { self } = useCtrl(UserFormCtrl);
-  
+
   return (
     <div>
       <Input ctrl={self.nameInput} />
@@ -876,7 +884,7 @@ class UserEntity {
     name: state(""),
     email: state(""),
   });
-  
+
   async save() {
     await this.api.updateUser(this.model.get());
   }
@@ -885,11 +893,11 @@ class UserEntity {
 // CTRL: Orquesta la interacción
 class UserFormCtrl extends Ctrl {
   private user = new UserEntity();
-  
+
   nameInput = new InputCtrl().set({
     value: this.user.model.name, // Vincula el modelo con el input
   });
-  
+
   saveButton = new ButtonCtrl().set({
     onClick: () => this.user.save(), // Ejecuta la acción del dominio
   });
@@ -898,10 +906,10 @@ class UserFormCtrl extends Ctrl {
 // PRESENTATION: Visualiza y captura eventos
 function UserForm() {
   const { self } = useCtrl(UserFormCtrl);
-  
+
   return (
     <div>
-      <Input ctrl={self.nameInput} />  {/* Renderiza según el estado */}
+      <Input ctrl={self.nameInput} /> {/* Renderiza según el estado */}
       <Button ctrl={self.saveButton} /> {/* Captura eventos del usuario */}
     </div>
   );
@@ -909,6 +917,7 @@ function UserForm() {
 ```
 
 **Flujo de actualización:**
+
 1. Usuario escribe en el input (PRESENTATION)
 2. `onChange` actualiza `nameInput.value` (CTRL)
 3. `nameInput.value` está vinculado a `user.model.name` (DOMAIN)
@@ -916,6 +925,7 @@ function UserForm() {
 5. El componente se re-renderiza con el nuevo valor
 
 **Flujo de acción:**
+
 1. Usuario hace clic en guardar (PRESENTATION)
 2. Se ejecuta `saveButton.onClick` (CTRL)
 3. Se llama a `user.save()` (DOMAIN)
@@ -926,12 +936,14 @@ function UserForm() {
 Para comunicar elementos distantes en el árbol de componentes, usa estas estrategias según la distancia:
 
 **Elementos cercanos (padre-hijo directo):**
+
 ```typescript
 // Pasa el controlador como prop
 <Input ctrl={self.nameInput} />
 ```
 
 **Elementos lejanos (mismo árbol):**
+
 ```typescript
 // Usa eventos a través del controlador
 class ParentCtrl extends Ctrl {
@@ -945,6 +957,7 @@ class ParentCtrl extends Ctrl {
 ```
 
 **Elementos muy lejanos (diferentes árboles):**
+
 ```typescript
 // Usa estado compartido en el dominio o providers
 class GlobalState {
@@ -1048,14 +1061,14 @@ Un caso común es un formulario que valida en tiempo real y guarda datos:
 // DOMAIN
 class UserEntity {
   private api = provide(UserApi);
-  
+
   // Si el modelo crece mucho, muévelo a un archivo separado: UserModel.ts
   model = stateObject({
     name: state(""),
     email: state(""),
     age: state(0),
   });
-  
+
   // Si las validaciones crecen mucho, muévelas a un archivo separado: UserValidator.ts
   validation = {
     name: calc(() => {
@@ -1071,11 +1084,11 @@ class UserEntity {
       return age < 18 ? "Debe ser mayor de edad" : "";
     }),
   };
-  
+
   isValid = calc(() => {
-    return Object.values(this.validation).every(v => !v.get());
+    return Object.values(this.validation).every((v) => !v.get());
   });
-  
+
   async save() {
     if (!this.isValid.get()) return;
     await this.api.updateUser(this.model.get());
@@ -1086,14 +1099,14 @@ class UserEntity {
 class UserFormCtrl extends Ctrl {
   private user = new UserEntity();
   private saving = state(false);
-  
+
   nameInput = new InputCtrl<string>().set({
     label: "Nombre",
     value: this.user.model.name,
     error: this.user.validation.name,
     disabled: this.saving,
   });
-  
+
   emailInput = new InputCtrl<string>().set({
     label: "Email",
     value: this.user.model.email,
@@ -1101,7 +1114,7 @@ class UserFormCtrl extends Ctrl {
     type: "email",
     disabled: this.saving,
   });
-  
+
   saveButton = new ButtonCtrl().set({
     label: "Guardar",
     loading: this.saving,
@@ -1117,7 +1130,7 @@ class UserFormCtrl extends Ctrl {
 // PRESENTATION
 function UserForm() {
   const { self } = useCtrl(UserFormCtrl);
-  
+
   return (
     <div>
       <Input ctrl={self.nameInput} />
@@ -1138,44 +1151,44 @@ Lo importante de este patrón es que la lógica de dependencia se declara de for
 // CTRL
 class UserDetailCtrl extends Ctrl {
   private masterData = provide(MasterDataApi);
-  
+
   // Select de países (independiente)
   countrySelect = new SelectCtrl<Country, string>().set({
     label: "País",
     placeholder: "Selecciona un país",
-    labelKey: 'name',
+    labelKey: "name",
     valueKey: "id",
     options: asyncCalc(() => this.masterData.getCountries()),
     value: this.user.model.countryId,
   });
-  
+
   // Select de ciudades (dependiente del país)
   // La clave está en usar asyncCalc que se recalcula cuando cambian sus dependencias
   citySelect = new SelectCtrl<City, string>().set((_select) => ({
     label: "Ciudad",
     placeholder: "Selecciona una ciudad",
-    labelKey: 'name',
+    labelKey: "name",
     valueKey: "id",
     value: this.user.model.cityId,
-    
+
     // asyncCalc se ejecuta automáticamente cuando countrySelect.value cambia
     options: asyncCalc(async () => {
       // Limpia la ciudad seleccionada cuando cambia el país
       _select.value.set(null);
-      
+
       // Si no hay país seleccionado, no buscar ciudades
       const countryId = this.countrySelect.value.get(); // ← Dependencia
       if (!countryId) return [];
-      
+
       // Buscar ciudades para el país seleccionado
       _select.loading.set(true);
       const cities = await this.masterData.getCities(countryId);
       _select.loading.set(false);
-      
+
       return cities;
     }),
   }));
-  
+
   constructor(private user: UserEntity) {
     super();
   }
@@ -1192,11 +1205,11 @@ countrySelect = new SelectCtrl().set({
   onChange: (countryId) => {
     // Lógica imperativa: "cuando esto pase, haz esto"
     this.citySelect.loading.set(true);
-    this.masterData.getCities(countryId).then(cities => {
+    this.masterData.getCities(countryId).then((cities) => {
       this.citySelect.options.set(cities);
       this.citySelect.loading.set(false);
     });
-  }
+  },
 });
 
 // ✅ Enfoque declarativo (recomendado)
@@ -1210,6 +1223,7 @@ citySelect = new SelectCtrl().set({
 ```
 
 El enfoque declarativo es más limpio porque:
+
 - La lógica está donde corresponde (en el select que depende)
 - Se recalcula automáticamente cuando cambian las dependencias
 - Es más fácil de entender y mantener
@@ -1221,7 +1235,7 @@ Mostrar una tabla que al hacer clic en una fila abre un detalle:
 ```typescript
 class UserPanelCtrl extends Ctrl {
   userDetailCtrl = state<UserDetailCtrl>(null);
-  
+
   userTable = new UserTableCtrl().set({
     onOpenDetail: (user: UserEntity) => {
       const detail = new UserDetailCtrl(user).set({
@@ -1231,7 +1245,7 @@ class UserPanelCtrl extends Ctrl {
           this.userDetailCtrl.set(null);
         },
       });
-      
+
       this.userDetailCtrl.set(detail);
     },
   });
@@ -1240,7 +1254,7 @@ class UserPanelCtrl extends Ctrl {
 function UserPanel() {
   const { self } = useCtrl(UserPanelCtrl);
   const userDetail = self.userDetailCtrl.get();
-  
+
   return (
     <div>
       {!userDetail && <Table ctrl={self.userTable} />}
@@ -1259,11 +1273,11 @@ class UserListCtrl extends Ctrl {
   private api = provide(UserApi);
   users = state<User[]>([]);
   loading = state(true);
-  
+
   ctrlStart() {
     this.loadUsers();
   }
-  
+
   async loadUsers() {
     this.loading.set(true);
     const users = await this.api.getUsers();
@@ -1281,14 +1295,18 @@ class UserListCtrl extends Ctrl {
 // ❌ MAL
 function UserForm() {
   const { self } = useCtrl(UserFormCtrl);
-  
+
   return (
-    <button onClick={async () => {
-      // Lógica de negocio en el componente
-      if (self.name.get().length > 0) {
-        await api.save({ name: self.name.get() });
-      }
-    }}>Guardar</button>
+    <button
+      onClick={async () => {
+        // Lógica de negocio en el componente
+        if (self.name.get().length > 0) {
+          await api.save({ name: self.name.get() });
+        }
+      }}
+    >
+      Guardar
+    </button>
   );
 }
 
@@ -1297,7 +1315,7 @@ class UserFormCtrl extends Ctrl {
   saveButton = new ButtonCtrl().set({
     onClick: () => this.save(), // Lógica en el controlador
   });
-  
+
   private async save() {
     if (this.name.get().length > 0) {
       await this.api.save({ name: this.name.get() });
@@ -1313,7 +1331,7 @@ class UserFormCtrl extends Ctrl {
 function Header() {
   const { self } = useCtrl(HeaderCtrl);
   const userName = self.user.get()?.name || "Invitado"; // Se ejecuta en cada render
-  
+
   return <span>{userName}</span>;
 }
 
@@ -1330,14 +1348,14 @@ class HeaderCtrl extends Ctrl {
 ```typescript
 class MyCtrl extends Ctrl {
   private intervalId: number;
-  
+
   ctrlStart() {
     // Inicia un intervalo
     this.intervalId = setInterval(() => {
       this.refresh();
     }, 5000);
   }
-  
+
   ctrlDestroy() {
     // IMPORTANTE: Limpia el intervalo
     clearInterval(this.intervalId);
